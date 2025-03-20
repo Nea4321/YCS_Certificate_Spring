@@ -1,3 +1,9 @@
 /gradlew text eol=lf
 *.bat text eol=crlf
 *.jar binary
+build.gradle text eol=lf
+gradle/wrapper/gradle-wrapper.properties text eol=lf
+settings.gradle text eol=lf
+src/main/java/kr/yuhancert/spring/YcsCertificateSpringApplication.java text eol=lf
+src/main/resources/application.properties text eol=lf
+src/test/java/kr/yuhancert/spring/YcsCertificateSpringApplicationTests.java text eol=lf
