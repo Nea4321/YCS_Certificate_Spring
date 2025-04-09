@@ -43,4 +43,5 @@ public class DepartmentController {
                     .body(errorResponse);
         }
     }
+
 }

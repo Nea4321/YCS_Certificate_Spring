@@ -70,66 +70,61 @@ public class DepartmentService {
 
         Map<String, DeptListDTO> dtoMap = new HashMap<>();
 
-        for(DeptMap dm : deptMapEntities) {
+        for(DeptMap dm : deptMapEntities){
 
-            String parent_type;
-            Long parent_id;
-            String parent_name;
-            String child_type;
-            Long child_id;
-            String child_name;
+            DeptListDTO parentDTO;
+            DeptListChildDTO childDTO;
 
-            /// 부모찾기
             if (dm.getFaculty() != null) {
-                Faculty facultyP = dm.getFaculty();
-                parent_type = "faculty";
-                parent_id = facultyP.getId();
-                parent_name = facultyP.getFacultyName();
+                parentDTO = new DeptListDTO(
+                        "faculty",
+                        dm.getFaculty().getId(),
+                        dm.getFaculty().getFacultyName(),
+                        new ArrayList<>()
+                );
             } else if (dm.getDepartment() != null) {
-                Department departmentP = dm.getDepartment();
-                parent_type = "department";
-                parent_id = departmentP.getId();
-                parent_name = departmentP.getDepartmentName();
+                parentDTO = new DeptListDTO(
+                        "department",
+                        dm.getDepartment().getId(),
+                        dm.getDepartment().getDepartmentName(),
+                        new ArrayList<>()
+                );
             } else {
-                Major majorP = dm.getMajor();
-                parent_type = "major";
-                parent_id = majorP.getId();
-                parent_name = majorP.getMajorName();
+                parentDTO = new DeptListDTO(
+                        "major",
+                        dm.getMajor().getId(),
+                        dm.getMajor().getMajorName(),
+                        new ArrayList<>()
+                );
             }
 
-            /// 자식찾기
             if (dm.getMajor() != null) {
-                Major majorC = dm.getMajor();
-                child_type = "major";
-                child_id = majorC.getId();
-                child_name = majorC.getMajorName();
+                childDTO = new DeptListChildDTO(
+                        "major",
+                        dm.getMajor().getId(),
+                        dm.getMajor().getMajorName()
+                );
             } else if (dm.getDepartment() != null) {
-                Department departmentC = dm.getDepartment();
-                child_type = "department";
-                child_id = departmentC.getId();
-                child_name = departmentC.getDepartmentName();
+                childDTO = new DeptListChildDTO(
+                        "department",
+                        dm.getDepartment().getId(),
+                        dm.getDepartment().getDepartmentName()
+                );
             } else {
-                Faculty facultyC = dm.getFaculty();
-                child_type = "faculty";
-                child_id = facultyC.getId();
-                child_name = facultyC.getFacultyName();
+                childDTO = new DeptListChildDTO(
+                        "faculty",
+                        dm.getFaculty().getId(),
+                        dm.getFaculty().getFacultyName()
+                );
             }
 
-            DeptListChildDTO childDTO = new DeptListChildDTO(child_type, child_id, child_name);
+            String key = parentDTO.getParent_type() + ":" + parentDTO.getParent_id();
 
-            String key = parent_type + ":" + parent_id;
-
-            DeptListDTO parentDTO = dtoMap.get(key);
-
-            if (parentDTO == null) {
-                List<DeptListChildDTO> deptListChildDTOList = new ArrayList<>();
-                deptListChildDTOList.add(childDTO);
-
-                parentDTO = new DeptListDTO(parent_type, parent_id, parent_name, deptListChildDTOList);
+            if (!dtoMap.containsKey(key)) {
                 dtoMap.put(key, parentDTO);
-            } else {
-                parentDTO.getChild().add(childDTO);
             }
+
+            dtoMap.get(key).getChild().add(childDTO);
 
         }
 
