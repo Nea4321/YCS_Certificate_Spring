@@ -1,6 +1,5 @@
 package kr.yuhancert.spring.domain.department.service;
 
-import kr.yuhancert.spring.domain.department.dto.DeptListChildDTO;
 import kr.yuhancert.spring.domain.department.dto.DeptListDTO;
 import kr.yuhancert.spring.domain.department.entity.Department;
 import kr.yuhancert.spring.domain.department.entity.DeptMap;
@@ -31,7 +30,9 @@ public class DepartmentService {
     private List<Faculty> facultyEntities;
     private List<Major> majorEntities;
     private List<DeptMap> deptMapEntities;
+    private DepartmentList departmentList;
     Logger logger = LoggerFactory.getLogger(DepartmentService.class);
+
 
     public DepartmentService(CacheService __cacheService,
                              DepartmentRepository __departmentRepository,
@@ -44,92 +45,46 @@ public class DepartmentService {
         this.facultyRepository = __facultyRepository;
         this.majorRepository = __majorRepository;
         this.deptMapRepository = __deptMapRepository;
-
+        this.departmentList = new DepartmentList();
     }
 
-    public void resetEntities(){
-        departmentEntities = departmentRepository.findAll();
-        facultyEntities = facultyRepository.findAll();
-        majorEntities = majorRepository.findAll();
-        deptMapEntities = deptMapRepository.findAll();
+
+    public void checkEntities(){
+
+        if(departmentEntities == null || departmentEntities.isEmpty()){
+            departmentEntities = departmentRepository.findAll();
+        }
+
+        if (facultyEntities == null || facultyEntities.isEmpty()){
+            facultyEntities = facultyRepository.findAll();
+        }
+
+        if (majorEntities == null || majorEntities.isEmpty()){
+            majorEntities = majorRepository.findAll();
+        }
+
+        if (deptMapEntities == null || deptMapEntities.isEmpty()) {
+            deptMapEntities = deptMapRepository.findAll();
+        }
+
     }
 
 
     @Transactional(readOnly = true)
     public List<DeptListDTO> getDeptList() {
 
-        List<DeptListDTO> cacheDeptList =cacheService.get(CacheList.DEPT_LIST_CACHE.getName(), "all");
+        String CACHE_KEY_DL = "list";
+        List<DeptListDTO> cacheDeptList =cacheService.get(CacheList.DEPT_LIST_CACHE.getName(), CACHE_KEY_DL);
         if (cacheDeptList != null) {
             return cacheDeptList;
         }
 
-        if (deptMapEntities == null || deptMapEntities.isEmpty()) {
-            logger.debug("Entities are empty");
-            resetEntities();
-        }
+        checkEntities();
 
-        Map<String, DeptListDTO> dtoMap = new HashMap<>();
+        List<DeptListDTO> deptList = departmentList.createDeptList(deptMapEntities);
 
-        for(DeptMap dm : deptMapEntities){
+        cacheService.put(CacheList.DEPT_LIST_CACHE.getName(), CACHE_KEY_DL, deptList);
 
-            DeptListDTO parentDTO;
-            DeptListChildDTO childDTO;
-
-            if (dm.getFaculty() != null) {
-                parentDTO = new DeptListDTO(
-                        "faculty",
-                        dm.getFaculty().getId(),
-                        dm.getFaculty().getFacultyName(),
-                        new ArrayList<>()
-                );
-            } else if (dm.getDepartment() != null) {
-                parentDTO = new DeptListDTO(
-                        "department",
-                        dm.getDepartment().getId(),
-                        dm.getDepartment().getDepartmentName(),
-                        new ArrayList<>()
-                );
-            } else {
-                parentDTO = new DeptListDTO(
-                        "major",
-                        dm.getMajor().getId(),
-                        dm.getMajor().getMajorName(),
-                        new ArrayList<>()
-                );
-            }
-
-            if (dm.getMajor() != null) {
-                childDTO = new DeptListChildDTO(
-                        "major",
-                        dm.getMajor().getId(),
-                        dm.getMajor().getMajorName()
-                );
-            } else if (dm.getDepartment() != null) {
-                childDTO = new DeptListChildDTO(
-                        "department",
-                        dm.getDepartment().getId(),
-                        dm.getDepartment().getDepartmentName()
-                );
-            } else {
-                childDTO = new DeptListChildDTO(
-                        "faculty",
-                        dm.getFaculty().getId(),
-                        dm.getFaculty().getFacultyName()
-                );
-            }
-
-            String key = parentDTO.getParent_type() + ":" + parentDTO.getParent_id();
-
-            if (!dtoMap.containsKey(key)) {
-                dtoMap.put(key, parentDTO);
-            }
-
-            dtoMap.get(key).getChild().add(childDTO);
-
-        }
-
-        List<DeptListDTO> deptList = new ArrayList<>(dtoMap.values());
-        cacheService.put(CacheList.DEPT_LIST_CACHE.getName(), "all", deptList);
         return deptList;
     }
 

@@ -26,36 +26,36 @@ public class CacheService {
 
     /**
      * 캐시에서 데이터 조회
-     * @param cacheName 캐시 이름
-     * @param key 캐시 키
+     * @param __cacheName 캐시 이름
+     * @param __key 캐시 키
      * @return 캐시된 데이터, 없으면 null
      */
     @SuppressWarnings("unchecked")
-    public <T> T get(String cacheName, Object key) {
-        String cacheKey = generateKey(key);
+    public <T> T get(String __cacheName, Object __key) {
+        String cacheKey = generateKey(__key);
 
         // 1. 로컬 캐시 확인
-        Cache caffeineCache = caffeineCacheManager.getCache(cacheName);
+        Cache caffeineCache = caffeineCacheManager.getCache(__cacheName);
         if (caffeineCache != null) {
             Cache.ValueWrapper caffeineValue = caffeineCache.get(cacheKey);
             if (caffeineValue != null) {
-                log.debug("Local cache hit: {} (local)", cacheName);
+                log.debug("Cache Hit : {} (LOCAL)", __cacheName);
                 return (T) caffeineValue.get();
             }
         }
 
-        // 2. 분산 캐시 확인
-        Cache redisCache = redisCacheManager.getCache(cacheName);
+        // 2. 리모트 캐시 확인
+        Cache redisCache = redisCacheManager.getCache(__cacheName);
         if (redisCache != null) {
             Cache.ValueWrapper redisValue = redisCache.get(cacheKey);
             if (redisValue != null) {
                 T result = (T) redisValue.get();
-                log.debug("Remote cache hit: {} (remote)", cacheName);
+                log.debug("Cache Hit : {} (REMOTE)", __cacheName);
 
                 // 로컬 캐시에도 저장
                 if (caffeineCache != null) {
                     caffeineCache.put(cacheKey, result);
-                    log.debug("Updated local cache: {}", cacheName);
+                    log.debug("Updated LOCAL cache : {}", __cacheName);
                 }
 
                 return result;
@@ -63,91 +63,92 @@ public class CacheService {
         }
 
         // 캐시 미스
-        log.debug("Cache miss: {}", cacheName);
+        log.debug("Cache Miss : {}", __cacheName);
         return null;
     }
 
     /**
      * 데이터를 캐시에 저장
-     * @param cacheName 캐시 이름
-     * @param key 캐시 키
-     * @param value 저장할 데이터
+     * @param __cacheName 캐시 이름
+     * @param __key 캐시 키
+     * @param __value 저장할 데이터
      */
-    public <T> void put(String cacheName, Object key, T value) {
-        if (value == null) {
-            log.debug("Skipping null value for cache: {}", cacheName);
+    public <T> void put(String __cacheName, Object __key, T __value) {
+
+        if (__value == null) {
+            log.debug("Skipping null value for cache : {}", __cacheName);
             return;
         }
 
-        String cacheKey = generateKey(key);
+        String cacheKey = generateKey(__key);
 
         // 1. 로컬 캐시에 저장
-        Cache caffeineCache = caffeineCacheManager.getCache(cacheName);
+        Cache caffeineCache = caffeineCacheManager.getCache(__cacheName);
         if (caffeineCache != null) {
-            caffeineCache.put(cacheKey, value);
-            log.debug("Local cached put: {}", cacheName);
+            caffeineCache.put(cacheKey, __value);
+            log.debug("Cached Put : {} (LOCAL)", __cacheName);
         }
 
         // 2. 분산 캐시에 저장
-        Cache redisCache = redisCacheManager.getCache(cacheName);
+        Cache redisCache = redisCacheManager.getCache(__cacheName);
         if (redisCache != null) {
-            redisCache.put(cacheKey, value);
-            log.debug("Remote Cached put: {}", cacheName);
+            redisCache.put(cacheKey, __value);
+            log.debug("Cached Put : {} (REMOTE)", __cacheName);
         }
 
     }
 
     /**
      * 캐시에서 데이터 제거
-     * @param cacheName 캐시 이름
-     * @param key 캐시 키
+     * @param __cacheName 캐시 이름
+     * @param __key 캐시 키
      */
-    public void evict(String cacheName, Object key) {
-        String cacheKey = generateKey(key);
+    public void evict(String __cacheName, Object __key) {
+        String cacheKey = generateKey(__key);
 
         // 1. 로컬 캐시에서 제거
-        Cache caffeineCache = caffeineCacheManager.getCache(cacheName);
+        Cache caffeineCache = caffeineCacheManager.getCache(__cacheName);
         if (caffeineCache != null) {
             caffeineCache.evict(cacheKey);
-            log.debug("Evicted from local cache: {}", cacheName);
+            log.debug("Evicted from local cache : {}", __cacheName);
         }
 
         // 2. 분산 캐시에서 제거
-        Cache redisCache = redisCacheManager.getCache(cacheName);
+        Cache redisCache = redisCacheManager.getCache(__cacheName);
         if (redisCache != null) {
             redisCache.evict(cacheKey);
-            log.debug("Evicted from remote cache: {}", cacheName);
+            log.debug("Evicted from remote cache : {}", __cacheName);
         }
     }
 
     /**
      * 캐시 전체 비우기
-     * @param cacheName 캐시 이름
+     * @param __cacheName 캐시 이름
      */
-    public void clear(String cacheName) {
+    public void clear(String __cacheName) {
         // 1. 로컬 캐시 비우기
-        Cache caffeineCache = caffeineCacheManager.getCache(cacheName);
+        Cache caffeineCache = caffeineCacheManager.getCache(__cacheName);
         if (caffeineCache != null) {
             caffeineCache.clear();
-            log.debug("Cleared local cache: {}", cacheName);
+            log.debug("Cleared local cache : {}", __cacheName);
         }
 
         // 2. 분산 캐시 비우기
-        Cache redisCache = redisCacheManager.getCache(cacheName);
+        Cache redisCache = redisCacheManager.getCache(__cacheName);
         if (redisCache != null) {
             redisCache.clear();
-            log.debug("Cleared remote cache: {}", cacheName);
+            log.debug("Cleared remote cache : {}", __cacheName);
         }
     }
 
     /**
      * 캐시 키 생성
      */
-    private String generateKey(Object key) {
-        if (key == null) {
+    private String generateKey(Object __key) {
+        if (__key == null) {
             return "null";
         }
-        return key.toString();
+        return __key.toString();
     }
 
 

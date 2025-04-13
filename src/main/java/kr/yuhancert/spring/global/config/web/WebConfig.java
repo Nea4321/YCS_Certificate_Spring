@@ -46,7 +46,7 @@ class TestWebConfig implements WebMvcConfigurer {
 @Profile("development")
 class DevelopWebConfig implements WebMvcConfigurer{
 
-    private static final Logger logger = LoggerFactory.getLogger(TestWebConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(DevelopWebConfig.class);
 
     @Value("${TEST_FRONTEND_URL:http://localhost:5173}")
     private String frontendUrl;
