@@ -61,19 +61,22 @@ public class DepartmentList {
                 childDTO = new DeptListChildDTO(
                         TABLE_TYPE_MJ,
                         dm.getMajor().getId(),
-                        dm.getMajor().getMajorName()
+                        dm.getMajor().getMajorName(),
+                        dm.getId()
                 );
             } else if (dm.getDepartment() != null) {
                 childDTO = new DeptListChildDTO(
                         TABLE_TYPE_DP,
                         dm.getDepartment().getId(),
-                        dm.getDepartment().getDepartmentName()
+                        dm.getDepartment().getDepartmentName(),
+                        dm.getId()
                 );
             } else {
                 childDTO = new DeptListChildDTO(
                         TABLE_TYPE_FC,
                         dm.getFaculty().getId(),
-                        dm.getFaculty().getFacultyName()
+                        dm.getFaculty().getFacultyName(),
+                        dm.getId()
                 );
             }
 
