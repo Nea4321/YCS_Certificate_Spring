@@ -25,6 +25,8 @@ public class DepartmentController {
     private final DepartmentService departmentService;
     private final Logger logger = (Logger) LoggerFactory.getLogger(this.getClass());
 
+    private Map<String, String> errorResponse = new HashMap<>();
+
     public DepartmentController(DepartmentService __departmentService) {
         this.departmentService = __departmentService;
     }
@@ -36,7 +38,7 @@ public class DepartmentController {
             return ResponseEntity.ok(deptList);
         } catch (Exception e) {
             logger.error("Error getting department list", e);
-            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse = new HashMap<>();
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());
             errorResponse.put("timestamp", new Date().toString());
@@ -53,8 +55,8 @@ public class DepartmentController {
             List<DeptMap> deptMap = departmentService.getDeptMap();
             return ResponseEntity.ok(deptMap);
         } catch (Exception e) {
-            logger.error("Error getting department list", e);
-            Map<String, String> errorResponse = new HashMap<>();
+            logger.error("Error getting department mapping", e);
+            errorResponse = new HashMap<>();
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());
             errorResponse.put("timestamp", new Date().toString());
@@ -72,7 +74,7 @@ public class DepartmentController {
             return ResponseEntity.ok(deptMapData);
         } catch (Exception e) {
             logger.error("Error getting department data", e);
-            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse = new HashMap<>();
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());
             errorResponse.put("timestamp", new Date().toString());

@@ -52,7 +52,7 @@ public class DepartmentService {
     }
 
 
-    public void checkEntities(){
+    private void checkDeptEntities(){
 
         if(departmentEntities == null || departmentEntities.isEmpty()){
             departmentEntities = departmentRepository.findAll();
@@ -86,7 +86,7 @@ public class DepartmentService {
             return cacheDeptList;
         }
 
-        checkEntities();
+        checkDeptEntities();
 
         List<DeptListDTO> deptList = departmentList.createDeptList(deptMapEntities);
 
@@ -102,7 +102,7 @@ public class DepartmentService {
             return cacheDeptMap;
         }
 
-        checkEntities();
+        checkDeptEntities();
 
         cacheService.put(CacheList.DEPT_MAP_CACHE.getName(), CACHE_KEY_DM, this.deptMapEntities);
 
@@ -117,9 +117,9 @@ public class DepartmentService {
             return cacheDeptMapData;
         }
 
-        checkEntities();
+        checkDeptEntities();
 
-        cacheService.put(CacheList.CERT_DATA_CACHE.getName(), deptMapDataEntities.get(__id), __id);
+        cacheService.put(CacheList.DEPT_DATA_CACHE.getName(), deptMapDataEntities.get(__id), __id);
 
         return deptMapDataEntities.get(__id);
 

@@ -16,6 +16,7 @@ public class CacheList {
     public static final CertCache DEPT_DATA_CACHE = CertCache.of("deptDataCache", 1, 24, 100);
 
     public static final CertCache CERT_CACHE = CertCache.of("certCache", 1, 24, 300);
+    public static final CertCache CERT_DEPT_CACHE = CertCache.of("certCache", 1, 24, 300);
     public static final CertCache CERT_DATA_CACHE = CertCache.of("certDataCache", 1, 12, 300);
 
 
@@ -24,7 +25,7 @@ public class CacheList {
             /// 학사 관련
             FACULTY_CACHE, DEPARTMENT_CACHE, MAJOR_CACHE, DEPT_MAP_CACHE, DEPT_LIST_CACHE, DEPT_DATA_CACHE,
             /// 자격증 관련
-            CERT_CACHE, CERT_DATA_CACHE
+            CERT_CACHE, CERT_DEPT_CACHE, CERT_DATA_CACHE
 
     );
 
@@ -34,7 +35,7 @@ public class CacheList {
     );
 
     public static final List<CertCache> CERT_CACHES = List.of(
-        CERT_CACHE, CERT_DATA_CACHE
+        CERT_CACHE, CERT_DEPT_CACHE, CERT_DATA_CACHE
     );
 
 
