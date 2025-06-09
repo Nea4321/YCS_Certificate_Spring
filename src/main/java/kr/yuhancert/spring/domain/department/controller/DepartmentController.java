@@ -2,6 +2,7 @@ package kr.yuhancert.spring.domain.department.controller;
 
 import ch.qos.logback.classic.Logger;
 import kr.yuhancert.spring.domain.department.dto.DeptListDTO;
+import kr.yuhancert.spring.domain.department.dto.DeptMapDTO;
 import kr.yuhancert.spring.domain.department.entity.DeptMap;
 import kr.yuhancert.spring.domain.department.entity.DeptMapData;
 import kr.yuhancert.spring.domain.department.service.DepartmentService;
@@ -52,7 +53,7 @@ public class DepartmentController {
     @GetMapping("/map")
     public ResponseEntity<?> getDeptMap() {
         try {
-            List<DeptMap> deptMap = departmentService.getDeptMap();
+            List<DeptMapDTO> deptMap = departmentService.getDeptMap();
             return ResponseEntity.ok(deptMap);
         } catch (Exception e) {
             logger.error("Error getting department mapping", e);

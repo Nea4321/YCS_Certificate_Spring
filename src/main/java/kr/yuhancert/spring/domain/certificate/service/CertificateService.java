@@ -88,14 +88,14 @@ public class CertificateService {
     }
 
     public CertData getCertData(Long __id) {
-        CertData cacheCertData = cacheService.get(CacheList.CERT_DATA_CACHE.getName(),__id);
+        CertData cacheCertData = cacheService.get(CacheList.CERT_DATA_CACHE.getName(), __id);
         if (cacheCertData != null) {
             return cacheCertData;
         }
 
         checkCertEntities();
 
-        cacheService.put(CacheList.CERT_DATA_CACHE.getName(), certDataEntities.get(__id), cacheCertData);
+        cacheService.put(CacheList.CERT_DATA_CACHE.getName(), __id, this.certDataEntities.get(__id));
 
         return this.certDataEntities.get(__id);
     }

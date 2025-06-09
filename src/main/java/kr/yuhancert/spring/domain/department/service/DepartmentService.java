@@ -1,6 +1,7 @@
 package kr.yuhancert.spring.domain.department.service;
 
 import kr.yuhancert.spring.domain.department.dto.DeptListDTO;
+import kr.yuhancert.spring.domain.department.dto.DeptMapDTO;
 import kr.yuhancert.spring.domain.department.entity.*;
 import kr.yuhancert.spring.domain.department.repository.*;
 import kr.yuhancert.spring.global.cache.service.CacheService;
@@ -31,8 +32,6 @@ public class DepartmentService {
     private Map<Long, DeptMapData> deptMapDataEntities;
     private DepartmentList departmentList;
     Logger logger = LoggerFactory.getLogger(DepartmentService.class);
-    private String CACHE_KEY_DM = "map";
-    private String CACHE_KEY_DL = "list";
 
 
     public DepartmentService(CacheService __cacheService,
@@ -81,6 +80,7 @@ public class DepartmentService {
     @Transactional(readOnly = true)
     public List<DeptListDTO> getDeptList() {
 
+        String CACHE_KEY_DL = "list";
         List<DeptListDTO> cacheDeptList =cacheService.get(CacheList.DEPT_LIST_CACHE.getName(), CACHE_KEY_DL);
         if (cacheDeptList != null) {
             return cacheDeptList;
@@ -95,18 +95,25 @@ public class DepartmentService {
         return deptList;
     }
 
-    public List<DeptMap> getDeptMap() {
+    public List<DeptMapDTO> getDeptMap() {
 
-        List<DeptMap> cacheDeptMap = cacheService.get(CacheList.DEPT_MAP_CACHE.getName(), CACHE_KEY_DM);
+        String CACHE_KEY_DM = "map";
+        List<DeptMapDTO> cacheDeptMap = cacheService.get(CacheList.DEPT_MAP_CACHE.getName(), CACHE_KEY_DM);
         if (cacheDeptMap != null) {
             return cacheDeptMap;
         }
 
         checkDeptEntities();
 
-        cacheService.put(CacheList.DEPT_MAP_CACHE.getName(), CACHE_KEY_DM, this.deptMapEntities);
+        List<DeptMapDTO> deptMapDTO = deptMapEntities.stream()
+                        .map(dm -> new DeptMapDTO(dm.getId(),
+                                dm.getFaculty() != null ? dm.getFaculty().getId() : null,
+                                dm.getDepartment() != null ? dm.getDepartment().getId() : null,
+                                dm.getMajor() != null ? dm.getMajor().getId() : null)).toList();
 
-        return this.deptMapEntities;
+        cacheService.put(CacheList.DEPT_MAP_CACHE.getName(), CACHE_KEY_DM, deptMapDTO);
+
+        return deptMapDTO;
 
     }
 

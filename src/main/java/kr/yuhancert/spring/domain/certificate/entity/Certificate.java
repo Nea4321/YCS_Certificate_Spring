@@ -1,5 +1,6 @@
 package kr.yuhancert.spring.domain.certificate.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -25,9 +26,11 @@ public class Certificate {
     private String certificateName;
 
     @OneToOne(mappedBy = "certificate")
+    @JsonIgnore
     private CertData certDatum;
 
     @OneToMany(mappedBy = "certificate")
+    @JsonIgnore
     private Set<CertDept> certDepts = new LinkedHashSet<>();
 
 }
