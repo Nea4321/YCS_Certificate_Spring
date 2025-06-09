@@ -1,6 +1,6 @@
 package kr.yuhancert.spring.domain.certificate.service;
 
-import kr.yuhancert.spring.domain.certificate.dto.CertDeptDto;
+import kr.yuhancert.spring.domain.certificate.dto.CertDeptDTO;
 import kr.yuhancert.spring.domain.certificate.entity.CertData;
 import kr.yuhancert.spring.domain.certificate.entity.CertDept;
 import kr.yuhancert.spring.domain.certificate.entity.Certificate;
@@ -69,17 +69,17 @@ public class CertificateService {
         return this.certificateEntities;
     }
 
-    public List<CertDeptDto> getCertDept() {
+    public List<CertDeptDTO> getCertDept() {
         String CACHE_KEY_CD = "cert_dept";
-        List<CertDeptDto> cacheCertDept = cacheService.get(CacheList.CERT_DEPT_CACHE.getName(), CACHE_KEY_CD);
+        List<CertDeptDTO> cacheCertDept = cacheService.get(CacheList.CERT_DEPT_CACHE.getName(), CACHE_KEY_CD);
         if (cacheCertDept != null) {
             return cacheCertDept;
         }
 
         checkCertEntities();
 
-        List<CertDeptDto> certDeptDto = certDeptEntities.stream()
-                .map(cd -> new CertDeptDto(cd.getId(), cd.getCertificate().getId(), cd.getDeptMap().getId()))
+        List<CertDeptDTO> certDeptDto = certDeptEntities.stream()
+                .map(cd -> new CertDeptDTO(cd.getId(), cd.getCertificate().getId(), cd.getDeptMap().getId()))
                 .toList();
 
         cacheService.put(CacheList.CERT_DEPT_CACHE.getName(), CACHE_KEY_CD, certDeptDto);

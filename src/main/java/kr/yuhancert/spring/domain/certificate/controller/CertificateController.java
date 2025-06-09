@@ -1,7 +1,7 @@
 package kr.yuhancert.spring.domain.certificate.controller;
 
 import ch.qos.logback.classic.Logger;
-import kr.yuhancert.spring.domain.certificate.dto.CertDeptDto;
+import kr.yuhancert.spring.domain.certificate.dto.CertDeptDTO;
 import kr.yuhancert.spring.domain.certificate.entity.*;
 import kr.yuhancert.spring.domain.certificate.service.CertificateService;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ public class CertificateController {
     @GetMapping("/dept")
     public ResponseEntity<?> getCertDept() {
         try {
-            List<CertDeptDto> certDept = certificateService.getCertDept();
+            List<CertDeptDTO> certDept = certificateService.getCertDept();
             return ResponseEntity.ok(certDept);
         }catch (Exception e) {
             logger.error("Error getting certificate department mapping", e);
