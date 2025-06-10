@@ -1,6 +1,5 @@
 package kr.yuhancert.spring.domain.certificate.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +17,6 @@ public class CertData {
     @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "certificate_id", nullable = false)
-    @JsonIgnore
     private Certificate certificate;
 
     @Column(name = "\"implYy\"")

@@ -1,9 +1,7 @@
 package kr.yuhancert.spring.domain.certificate.service;
 
-import kr.yuhancert.spring.domain.certificate.dto.CertDeptDTO;
-import kr.yuhancert.spring.domain.certificate.entity.CertData;
-import kr.yuhancert.spring.domain.certificate.entity.CertDept;
-import kr.yuhancert.spring.domain.certificate.entity.Certificate;
+import kr.yuhancert.spring.domain.certificate.dto.*;
+import kr.yuhancert.spring.domain.certificate.entity.*;
 import kr.yuhancert.spring.domain.certificate.repository.*;
 import kr.yuhancert.spring.global.cache.service.CacheService;
 import kr.yuhancert.spring.global.cache.util.CacheList;
@@ -87,17 +85,34 @@ public class CertificateService {
         return certDeptDto;
     }
 
-    public CertData getCertData(Long __id) {
-        CertData cacheCertData = cacheService.get(CacheList.CERT_DATA_CACHE.getName(), __id);
-        if (cacheCertData != null) {
-            return cacheCertData;
+    public CertDataDTO getCertData(Long __id) {
+        CertDataDTO cacheCertDataDTO = cacheService.get(CacheList.CERT_DATA_CACHE.getName(), __id);
+        if (cacheCertDataDTO != null) {
+            return cacheCertDataDTO;
         }
 
         checkCertEntities();
 
-        cacheService.put(CacheList.CERT_DATA_CACHE.getName(), __id, this.certDataEntities.get(__id));
+        CertData cd = this.certDataEntities.get(__id);
 
-        return this.certDataEntities.get(__id);
+        CertDataDTO certDataDTO = new CertDataDTO(cd.getId(),
+                cd.getImplYy(),
+                cd.getImplSeq(),
+                cd.getDescription(),
+                cd.getDocRegStartDt(),
+                cd.getDocRegEndDt(),
+                cd.getDocExamStartDt(),
+                cd.getDocExamEndDt(),
+                cd.getDocPassDt(),
+                cd.getPracRegStartDt(),
+                cd.getPracRegEndDt(),
+                cd.getPracExamStartDt(),
+                cd.getPracExamEndDt(),
+                cd.getPracPassDt());
+
+        cacheService.put(CacheList.CERT_DATA_CACHE.getName(), __id, certDataDTO);
+
+        return certDataDTO;
     }
 
 }

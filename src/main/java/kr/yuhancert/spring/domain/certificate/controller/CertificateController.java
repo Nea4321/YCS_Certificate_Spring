@@ -1,7 +1,7 @@
 package kr.yuhancert.spring.domain.certificate.controller;
 
 import ch.qos.logback.classic.Logger;
-import kr.yuhancert.spring.domain.certificate.dto.CertDeptDTO;
+import kr.yuhancert.spring.domain.certificate.dto.*;
 import kr.yuhancert.spring.domain.certificate.entity.*;
 import kr.yuhancert.spring.domain.certificate.service.CertificateService;
 import org.slf4j.LoggerFactory;
@@ -67,8 +67,8 @@ public class CertificateController {
     @GetMapping("/data/{id}")
     public ResponseEntity<?> getCertData(@PathVariable("id") Long id) {
         try {
-            CertData certData = certificateService.getCertData(id);
-            return ResponseEntity.ok(certData);
+            CertDataDTO certDataDTO = certificateService.getCertData(id);
+            return ResponseEntity.ok(certDataDTO);
         }catch (Exception e) {
             logger.error("Error getting certificate data", e);
             errorResponse = new HashMap<>();

@@ -20,7 +20,6 @@ public class DeptMapData {
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "dept_map_id")
-    @JsonIgnore
     private DeptMap deptMap;
 
     @Column(name = "asdf")

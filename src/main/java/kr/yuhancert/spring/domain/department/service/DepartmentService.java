@@ -2,6 +2,7 @@ package kr.yuhancert.spring.domain.department.service;
 
 import kr.yuhancert.spring.domain.department.dto.DeptListDTO;
 import kr.yuhancert.spring.domain.department.dto.DeptMapDTO;
+import kr.yuhancert.spring.domain.department.dto.DeptMapDataDTO;
 import kr.yuhancert.spring.domain.department.entity.*;
 import kr.yuhancert.spring.domain.department.repository.*;
 import kr.yuhancert.spring.global.cache.service.CacheService;
@@ -117,18 +118,21 @@ public class DepartmentService {
 
     }
 
-    public DeptMapData getDeptMapData(Long __id) {
+    public DeptMapDataDTO getDeptMapData(Long __id) {
         
-        DeptMapData cacheDeptMapData = cacheService.get(CacheList.DEPT_DATA_CACHE.getName(), __id);
-        if (cacheDeptMapData != null) {
-            return cacheDeptMapData;
+        DeptMapDataDTO cacheDeptMapDataDTO = cacheService.get(CacheList.DEPT_DATA_CACHE.getName(), __id);
+        if (cacheDeptMapDataDTO != null) {
+            return cacheDeptMapDataDTO;
         }
 
         checkDeptEntities();
 
-        cacheService.put(CacheList.DEPT_DATA_CACHE.getName(), deptMapDataEntities.get(__id), __id);
+        DeptMapDataDTO deptMapDataDTO = new DeptMapDataDTO(deptMapDataEntities.get(__id).getId(),
+                deptMapDataEntities.get(__id).getAsdf());
 
-        return deptMapDataEntities.get(__id);
+        cacheService.put(CacheList.DEPT_DATA_CACHE.getName(), deptMapDataDTO, __id);
+
+        return deptMapDataDTO;
 
     }
 
