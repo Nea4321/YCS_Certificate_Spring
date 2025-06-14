@@ -7,10 +7,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
+@Table(name = "cert_data")
 public class CertData {
 
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "certificate_id", nullable = false)
     private Long id;
 
@@ -19,43 +20,10 @@ public class CertData {
     @JoinColumn(name = "certificate_id", nullable = false)
     private Certificate certificate;
 
-    @Column(name = "\"implYy\"")
-    private Integer implYy;
+    @Column(name = "infogb", length = Integer.MAX_VALUE)
+    private String infogb;
 
-    @Column(name = "\"implSeq\"")
-    private Integer implSeq;
-
-    @Column(name = "description", length = Integer.MAX_VALUE)
-    private String description;
-
-    @Column(name = "\"docRegStartDt\"")
-    private Long docRegStartDt;
-
-    @Column(name = "\"docRegEndDt\"")
-    private Long docRegEndDt;
-
-    @Column(name = "\"docExamStartDt\"")
-    private Long docExamStartDt;
-
-    @Column(name = "\"docExamEndDt\"")
-    private Long docExamEndDt;
-
-    @Column(name = "\"docPassDt\"")
-    private Long docPassDt;
-
-    @Column(name = "\"pracRegStartDt\"")
-    private Long pracRegStartDt;
-
-    @Column(name = "\"pracRegEndDt\"")
-    private Long pracRegEndDt;
-
-    @Column(name = "\"pracExamStartDt\"")
-    private Long pracExamStartDt;
-
-    @Column(name = "\"pracExamEndDt\"")
-    private Long pracExamEndDt;
-
-    @Column(name = "\"pracPassDt\"")
-    private Long pracPassDt;
+    @Column(name = "contents", length = Integer.MAX_VALUE)
+    private String contents;
 
 }

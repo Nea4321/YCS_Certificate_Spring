@@ -13,7 +13,12 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@Table(name = "certificate")
 public class Certificate {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "jmcd")
+    private NationalCert jmcd;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,11 +31,9 @@ public class Certificate {
     private String certificateName;
 
     @OneToOne(mappedBy = "certificate")
-    @JsonIgnore
     private CertData certDatum;
 
     @OneToMany(mappedBy = "certificate")
-    @JsonIgnore
     private Set<CertDept> certDepts = new LinkedHashSet<>();
 
 }

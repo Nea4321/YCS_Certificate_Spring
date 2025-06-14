@@ -11,6 +11,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @Getter
 @Setter
 @Entity
+@Table(name = "cert_dept")
 public class CertDept {
 
     @Id

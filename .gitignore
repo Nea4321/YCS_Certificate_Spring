@@ -43,7 +43,7 @@ gen-external-apklibs
 # with Android Studio 3.5.
 
 ### dotenv ###
-.env
+src/main/resources/.env
 
 ### Eclipse ###
 .metadata
@@ -393,6 +393,7 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variable files
+.env
 .env.development.local
 .env.test.local
 .env.production.local

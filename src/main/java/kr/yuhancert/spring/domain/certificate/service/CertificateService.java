@@ -95,20 +95,10 @@ public class CertificateService {
 
         CertData cd = this.certDataEntities.get(__id);
 
-        CertDataDTO certDataDTO = new CertDataDTO(cd.getId(),
-                cd.getImplYy(),
-                cd.getImplSeq(),
-                cd.getDescription(),
-                cd.getDocRegStartDt(),
-                cd.getDocRegEndDt(),
-                cd.getDocExamStartDt(),
-                cd.getDocExamEndDt(),
-                cd.getDocPassDt(),
-                cd.getPracRegStartDt(),
-                cd.getPracRegEndDt(),
-                cd.getPracExamStartDt(),
-                cd.getPracExamEndDt(),
-                cd.getPracPassDt());
+        CertDataDTO certDataDTO = new CertDataDTO(
+                cd.getId(),
+                cd.getInfogb(),
+                cd.getContents());
 
         cacheService.put(CacheList.CERT_DATA_CACHE.getName(), __id, certDataDTO);
 
