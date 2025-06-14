@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DeptMapDataDTO {
-    private Long id;
+    private Long dept_map_id;
     private String asdf;
 }

@@ -12,6 +12,6 @@ public class DeptListChildDTO {
     private String child_type;
     private Long child_id;
     private String child_name;
-    private Long map_id;
+    private Long dept_map_id;
 
 }

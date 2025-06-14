@@ -31,8 +31,8 @@ public class CertificateController {
     @GetMapping("/list")
     public ResponseEntity<?> getCertificate() {
         try {
-            List<Certificate> certificate = certificateService.getCertificate();
-            return ResponseEntity.ok(certificate);
+            List<CertificateDTO> certificateDTO = certificateService.getCertificate();
+            return ResponseEntity.ok(certificateDTO);
         }catch (Exception e) {
             logger.error("Error getting certificate list", e);
             errorResponse = new HashMap<>();

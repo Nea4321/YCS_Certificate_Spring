@@ -53,18 +53,22 @@ public class CertificateService {
 
     }
 
-    public List<Certificate> getCertificate() {
+    public List<CertificateDTO> getCertificate() {
         String CACHE_KEY_CERT = "cert";
-        List<Certificate> cacheCertificate = cacheService.get(CacheList.CERT_CACHE.getName(), CACHE_KEY_CERT);
+        List<CertificateDTO> cacheCertificate = cacheService.get(CacheList.CERT_CACHE.getName(), CACHE_KEY_CERT);
         if (cacheCertificate != null) {
             return cacheCertificate;
         }
 
         checkCertEntities();
 
-        cacheService.put(CacheList.CERT_CACHE.getName(), CACHE_KEY_CERT, this.certificateEntities);
+        List<CertificateDTO> certificateDTO = certificateEntities.stream()
+                .map(c -> new CertificateDTO(c.getId(),c.getCertificateName(),c.getJmcd().getJmcd()))
+                .toList();
 
-        return this.certificateEntities;
+        cacheService.put(CacheList.CERT_CACHE.getName(), CACHE_KEY_CERT, certificateDTO);
+
+        return certificateDTO;
     }
 
     public List<CertDeptDTO> getCertDept() {

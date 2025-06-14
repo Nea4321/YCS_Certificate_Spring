@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CertDataDTO {
-    private Long cert_data_id;
-    private String infogb;
-    private String contents;
+public class CertificateDTO {
+    private Long certificate_id;
+    private String certificate_name;
+    private String jmcd;
 }

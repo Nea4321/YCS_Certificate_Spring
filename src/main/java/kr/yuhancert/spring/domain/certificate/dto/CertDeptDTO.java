@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CertDeptDTO {
-    private Long id;
-    private Long certificate;
-    private Long deptMap;
+    private Long cert_dept_id;
+    private Long certificate_id;
+    private Long dept_map_id;
 }
