@@ -40,39 +40,43 @@ public interface DeptListMapper {
     }
 
      private DeptListDTO createParentDTO(DeptMap __deptMap) {
-        if (__deptMap.getFaculty() != null) {
+        DeptMap dm = __deptMap;
+
+        if ( dm != null && dm.getFaculty() != null) {
             return new DeptListDTO(
                     FC_TABLE,
-                    __deptMap.getFaculty().getId(),
-                    __deptMap.getFaculty().getFacultyName(),
+                    dm.getFaculty().getId(),
+                    dm.getFaculty().getFacultyName(),
                     new ArrayList<>()
             );
-        } else if (__deptMap.getDepartment() != null) {
+        } else if ( dm != null && dm.getDepartment() != null) {
             return new DeptListDTO(
                     DP_TABLE,
-                    __deptMap.getDepartment().getId(),
-                    __deptMap.getDepartment().getDepartmentName(),
+                    dm.getDepartment().getId(),
+                    dm.getDepartment().getDepartmentName(),
                     new ArrayList<>()
             );
         } else {
             return new DeptListDTO(
                     MJ_TABLE,
-                    __deptMap.getMajor().getId(),
-                    __deptMap.getMajor().getMajorName(),
+                    dm.getMajor().getId(),
+                    dm.getMajor().getMajorName(),
                     new ArrayList<>()
             );
         }
     }
 
     private DeptListChildDTO createChildDTO(DeptMap __deptMap) {
-        if (__deptMap.getMajor() != null) {
+        DeptMap dm = __deptMap;
+
+        if ( dm != null && dm.getMajor() != null) {
             return new DeptListChildDTO(
                     MJ_TABLE,
-                    __deptMap.getMajor().getId(),
-                    __deptMap.getMajor().getMajorName(),
+                    dm.getMajor().getId(),
+                    dm.getMajor().getMajorName(),
                     __deptMap.getId()
             );
-        } else if (__deptMap.getDepartment() != null) {
+        } else if ( dm != null && dm.getDepartment() != null) {
             return new DeptListChildDTO(
                     DP_TABLE,
                     __deptMap.getDepartment().getId(),
