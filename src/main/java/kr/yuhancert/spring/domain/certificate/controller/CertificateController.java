@@ -2,7 +2,6 @@ package kr.yuhancert.spring.domain.certificate.controller;
 
 import ch.qos.logback.classic.Logger;
 import kr.yuhancert.spring.domain.certificate.dto.*;
-import kr.yuhancert.spring.domain.certificate.entity.*;
 import kr.yuhancert.spring.domain.certificate.service.CertificateService;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -35,24 +34,6 @@ public class CertificateController {
             return ResponseEntity.ok(certificateDTO);
         }catch (Exception e) {
             logger.error("Error getting certificate list", e);
-            errorResponse = new HashMap<>();
-            errorResponse.put("error", "Internal Server Error");
-            errorResponse.put("message", e.getMessage());
-            errorResponse.put("timestamp", new Date().toString());
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorResponse);
-        }
-    }
-
-    @GetMapping("/dept")
-    public ResponseEntity<?> getCertDept() {
-        try {
-            List<CertDeptDTO> certDept = certificateService.getCertDept();
-            return ResponseEntity.ok(certDept);
-        }catch (Exception e) {
-            logger.error("Error getting certificate department mapping", e);
             errorResponse = new HashMap<>();
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());

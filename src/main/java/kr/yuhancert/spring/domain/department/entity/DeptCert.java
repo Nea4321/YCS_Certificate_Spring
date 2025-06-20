@@ -1,22 +1,23 @@
-package kr.yuhancert.spring.domain.certificate.entity;
+package kr.yuhancert.spring.domain.department.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import kr.yuhancert.spring.domain.department.entity.DeptMap;
+import kr.yuhancert.spring.domain.certificate.entity.Certificate;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-@Getter
 @Setter
+@Getter
 @Entity
-@Table(name = "cert_dept")
-public class CertDept {
-
+@Table(name = "dept_cert")
+@NoArgsConstructor
+public class DeptCert {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "cert_dept_id", nullable = false)
+    @Column(name = "dept_cert_id", nullable = false)
     private Long id;
 
     @NotNull
@@ -25,6 +26,7 @@ public class CertDept {
     @JoinColumn(name = "certificate_id", nullable = false)
     private Certificate certificate;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "dept_map_id")

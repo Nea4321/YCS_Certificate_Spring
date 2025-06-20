@@ -2,6 +2,8 @@ package kr.yuhancert.spring.domain.certificate.service;
 
 import kr.yuhancert.spring.domain.certificate.dto.*;
 import kr.yuhancert.spring.domain.certificate.entity.*;
+import kr.yuhancert.spring.domain.certificate.mapper.CertDataMapper;
+import kr.yuhancert.spring.domain.certificate.mapper.CertificateMapper;
 import kr.yuhancert.spring.domain.certificate.repository.*;
 import kr.yuhancert.spring.global.cache.service.CacheService;
 import kr.yuhancert.spring.global.cache.util.CacheList;
@@ -19,31 +21,29 @@ public class CertificateService {
     private final CacheService cacheService;
     Logger logger = LoggerFactory.getLogger(CertificateService.class);
     private final CertificateRepository certificateRepository;
-    private final CertDeptRepository certDeptRepository;
     private final CertDataRepository certDataRepository;
+    private final CertificateMapper certificateMapper;
+    private final CertDataMapper certDataMapper;
     private List<Certificate> certificateEntities;
-    private List<CertDept> certDeptEntities;
     private Map<Long, CertData> certDataEntities;
 
 
     public CertificateService(CacheService __cacheService,
                               CertificateRepository __certificateRepository,
-                              CertDeptRepository __certDeptRepository,
-                              CertDataRepository __certDataRepository) {
+                              CertDataRepository __certDataRepository,
+                              CertificateMapper __certificateMapper,
+                              CertDataMapper __certDataMapper) {
         this.cacheService = __cacheService;
         this.certificateRepository = __certificateRepository;
-        this.certDeptRepository = __certDeptRepository;
         this.certDataRepository = __certDataRepository;
+        this.certificateMapper = __certificateMapper;
+        this.certDataMapper = __certDataMapper;
     }
 
     private void checkCertEntities() {
 
         if(certificateEntities == null || certificateEntities.isEmpty()) {
             certificateEntities = certificateRepository.findAll();
-        }
-
-        if (certDeptEntities == null || certDeptEntities.isEmpty()) {
-            certDeptEntities = certDeptRepository.findAll();
         }
 
         if (certDataEntities == null || certDataEntities.isEmpty()) {
@@ -62,31 +62,11 @@ public class CertificateService {
 
         checkCertEntities();
 
-        List<CertificateDTO> certificateDTO = certificateEntities.stream()
-                .map(c -> new CertificateDTO(c.getId(),c.getCertificateName(),c.getJmcd().getJmcd()))
-                .toList();
+        List<CertificateDTO> certificateDTO = certificateMapper.toCertificateDTOList(certificateEntities);
 
         cacheService.put(CacheList.CERT_CACHE.getName(), CACHE_KEY_CERT, certificateDTO);
 
         return certificateDTO;
-    }
-
-    public List<CertDeptDTO> getCertDept() {
-        String CACHE_KEY_CD = "cert_dept";
-        List<CertDeptDTO> cacheCertDept = cacheService.get(CacheList.CERT_DEPT_CACHE.getName(), CACHE_KEY_CD);
-        if (cacheCertDept != null) {
-            return cacheCertDept;
-        }
-
-        checkCertEntities();
-
-        List<CertDeptDTO> certDeptDto = certDeptEntities.stream()
-                .map(cd -> new CertDeptDTO(cd.getId(), cd.getCertificate().getId(), cd.getDeptMap().getId()))
-                .toList();
-
-        cacheService.put(CacheList.CERT_DEPT_CACHE.getName(), CACHE_KEY_CD, certDeptDto);
-
-        return certDeptDto;
     }
 
     public CertDataDTO getCertData(Long __id) {
@@ -97,12 +77,7 @@ public class CertificateService {
 
         checkCertEntities();
 
-        CertData cd = this.certDataEntities.get(__id);
-
-        CertDataDTO certDataDTO = new CertDataDTO(
-                cd.getId(),
-                cd.getInfogb(),
-                cd.getContents());
+        CertDataDTO certDataDTO = certDataMapper.toCertDataDTO(certDataEntities.get(__id));
 
         cacheService.put(CacheList.CERT_DATA_CACHE.getName(), __id, certDataDTO);
 

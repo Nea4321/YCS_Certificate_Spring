@@ -1,7 +1,5 @@
 package kr.yuhancert.spring.domain.department.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +20,7 @@ public class DeptMapData {
     @JoinColumn(name = "dept_map_id")
     private DeptMap deptMap;
 
-    @Column(name = "asdf")
-    private String asdf;
+    @Column(name = "description")
+    private String description;
 
 }

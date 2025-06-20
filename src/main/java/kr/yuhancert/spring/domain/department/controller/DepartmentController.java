@@ -4,14 +4,11 @@ import ch.qos.logback.classic.Logger;
 import kr.yuhancert.spring.domain.department.dto.DeptListDTO;
 import kr.yuhancert.spring.domain.department.dto.DeptMapDTO;
 import kr.yuhancert.spring.domain.department.dto.DeptMapDataDTO;
-import kr.yuhancert.spring.domain.department.entity.DeptMap;
-import kr.yuhancert.spring.domain.department.entity.DeptMapData;
 import kr.yuhancert.spring.domain.department.service.DepartmentService;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -69,10 +66,10 @@ public class DepartmentController {
         }
     }
 
-    @GetMapping("/data/{id}")
-    public ResponseEntity<?> getDeptData(@PathVariable("id") Long id) {
+    @GetMapping("/data")
+    public ResponseEntity<?> getDeptData() {
         try{
-            DeptMapDataDTO deptMapDataDTO = departmentService.getDeptMapData(id);
+            List<DeptMapDataDTO> deptMapDataDTO = departmentService.getDeptMapData();
             return ResponseEntity.ok(deptMapDataDTO);
         } catch (Exception e) {
             logger.error("Error getting department data", e);

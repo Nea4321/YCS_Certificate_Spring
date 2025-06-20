@@ -4,6 +4,9 @@ import kr.yuhancert.spring.domain.department.dto.DeptListDTO;
 import kr.yuhancert.spring.domain.department.dto.DeptMapDTO;
 import kr.yuhancert.spring.domain.department.dto.DeptMapDataDTO;
 import kr.yuhancert.spring.domain.department.entity.*;
+import kr.yuhancert.spring.domain.department.mapper.DeptListMapper;
+import kr.yuhancert.spring.domain.department.mapper.DeptMapDataMapper;
+import kr.yuhancert.spring.domain.department.mapper.DeptMapMapper;
 import kr.yuhancert.spring.domain.department.repository.*;
 import kr.yuhancert.spring.global.cache.service.CacheService;
 import kr.yuhancert.spring.global.cache.util.CacheList;
@@ -11,8 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +27,16 @@ public class DepartmentService {
     private final MajorRepository majorRepository;
     private final DeptMapRepository deptMapRepository;
     private final DeptMapDataRepository deptMapDataRepository;
+    private final DeptCertRepository deptCertRepository;
     private List<Department> departmentEntities;
     private List<Faculty> facultyEntities;
     private List<Major> majorEntities;
     private List<DeptMap> deptMapEntities;
-    private Map<Long, DeptMapData> deptMapDataEntities;
-    private DepartmentList departmentList;
+    private List<DeptMapData> deptMapDataEntities;
+    private List<DeptCert> deptCertEntities;
+    private final DeptMapMapper deptMapMapper;
+    private final DeptListMapper deptListMapper;
+    private final DeptMapDataMapper deptMapDataMapper;
     Logger logger = LoggerFactory.getLogger(DepartmentService.class);
 
 
@@ -40,7 +45,11 @@ public class DepartmentService {
                              FacultyRepository __facultyRepository,
                              MajorRepository __majorRepository,
                              DeptMapRepository __deptMapRepository,
-                             DeptMapDataRepository __deptMapDataRepository) {
+                             DeptMapDataRepository __deptMapDataRepository,
+                             DeptCertRepository __deptCertRepository,
+                             DeptMapMapper __deptMapMapper,
+                             DeptListMapper __deptListMapper,
+                             DeptMapDataMapper __deptMapDataMapper) {
 
         this.cacheService = __cacheService;
         this.departmentRepository = __departmentRepository;
@@ -48,7 +57,10 @@ public class DepartmentService {
         this.majorRepository = __majorRepository;
         this.deptMapRepository = __deptMapRepository;
         this.deptMapDataRepository = __deptMapDataRepository;
-        this.departmentList = new DepartmentList();
+        this.deptCertRepository = __deptCertRepository;
+        this.deptMapMapper = __deptMapMapper;
+        this.deptListMapper = __deptListMapper;
+        this.deptMapDataMapper = __deptMapDataMapper;
     }
 
 
@@ -71,8 +83,11 @@ public class DepartmentService {
         }
 
         if (deptMapDataEntities == null || deptMapDataEntities.isEmpty()) {
-            deptMapDataEntities = deptMapDataRepository.findAll().stream()
-                .collect(Collectors.toMap(DeptMapData::getId, Function.identity()));
+            deptMapDataEntities = deptMapDataRepository.findAll();
+        }
+
+        if (deptCertEntities == null || deptCertEntities.isEmpty()) {
+            deptCertEntities = deptCertRepository.findAll();
         }
 
     }
@@ -89,7 +104,7 @@ public class DepartmentService {
 
         checkDeptEntities();
 
-        List<DeptListDTO> deptList = departmentList.createDeptList(deptMapEntities);
+        List<DeptListDTO> deptList = deptListMapper.toDeptListDTOList(deptMapEntities);
 
         cacheService.put(CacheList.DEPT_LIST_CACHE.getName(), CACHE_KEY_DL, deptList);
 
@@ -106,11 +121,7 @@ public class DepartmentService {
 
         checkDeptEntities();
 
-        List<DeptMapDTO> deptMapDTO = deptMapEntities.stream()
-                        .map(dm -> new DeptMapDTO(dm.getId(),
-                                dm.getFaculty() != null ? dm.getFaculty().getId() : null,
-                                dm.getDepartment() != null ? dm.getDepartment().getId() : null,
-                                dm.getMajor() != null ? dm.getMajor().getId() : null)).toList();
+        List<DeptMapDTO> deptMapDTO = deptMapMapper.toDeptMapDTOList(deptMapEntities);
 
         cacheService.put(CacheList.DEPT_MAP_CACHE.getName(), CACHE_KEY_DM, deptMapDTO);
 
@@ -118,19 +129,19 @@ public class DepartmentService {
 
     }
 
-    public DeptMapDataDTO getDeptMapData(Long __id) {
-        
-        DeptMapDataDTO cacheDeptMapDataDTO = cacheService.get(CacheList.DEPT_DATA_CACHE.getName(), __id);
+    public List<DeptMapDataDTO> getDeptMapData() {
+
+        String CACHE_KEY_DMD = "data";
+        List<DeptMapDataDTO> cacheDeptMapDataDTO = cacheService.get(CacheList.DEPT_DATA_CACHE.getName(), CACHE_KEY_DMD);
         if (cacheDeptMapDataDTO != null) {
             return cacheDeptMapDataDTO;
         }
 
         checkDeptEntities();
 
-        DeptMapDataDTO deptMapDataDTO = new DeptMapDataDTO(deptMapDataEntities.get(__id).getId(),
-                deptMapDataEntities.get(__id).getAsdf());
+        List<DeptMapDataDTO> deptMapDataDTO = deptMapDataMapper.toDeptMapDataDTOList(deptMapDataEntities, deptCertEntities);
 
-        cacheService.put(CacheList.DEPT_DATA_CACHE.getName(), deptMapDataDTO, __id);
+        cacheService.put(CacheList.DEPT_DATA_CACHE.getName(), CACHE_KEY_DMD, deptMapDataDTO);
 
         return deptMapDataDTO;
 
