@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Size;
 import kr.yuhancert.spring.domain.department.entity.DeptCert;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -16,9 +18,6 @@ import java.util.Set;
 @Table(name = "certificate")
 public class Certificate {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "jmcd")
-    private NationalCert jmcd;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,6 +28,11 @@ public class Certificate {
     @NotNull
     @Column(name = "certificate_name", nullable = false)
     private String certificateName;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "jmcd")
+    private NationalCert jmcd;
 
     @OneToOne(mappedBy = "certificate")
     private CertData certDatum;

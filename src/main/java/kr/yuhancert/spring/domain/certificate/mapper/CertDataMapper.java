@@ -7,6 +7,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface CertDataMapper {
-    @Mapping(source = "id", target = "cert_data_id")
+    @Mapping(source = "id", target = "certificate_id")
+    @Mapping(source = "certificate.certificateName", target = "certificate_name")
     CertDataDTO toCertDataDTO(CertData __certData);
 }

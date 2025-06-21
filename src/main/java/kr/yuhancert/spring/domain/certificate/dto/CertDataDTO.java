@@ -10,7 +10,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CertDataDTO {
-    private Long cert_data_id;
+    private Long certificate_id;
+    private String certificate_name;
     private String infogb;
     private String contents;
 }

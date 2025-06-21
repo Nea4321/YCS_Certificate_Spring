@@ -25,7 +25,7 @@ public class CertificateService {
     private final CertificateMapper certificateMapper;
     private final CertDataMapper certDataMapper;
     private List<Certificate> certificateEntities;
-    private Map<Long, CertData> certDataEntities;
+    private CertData certDataEntities;
 
 
     public CertificateService(CacheService __cacheService,
@@ -46,10 +46,10 @@ public class CertificateService {
             certificateEntities = certificateRepository.findAll();
         }
 
-        if (certDataEntities == null || certDataEntities.isEmpty()) {
-            certDataEntities = certDataRepository.findAll().stream()
-                    .collect(Collectors.toMap(CertData::getId, Function.identity()));
-        }
+//        if (certDataEntities == null || certDataEntities.isEmpty()) {
+//            certDataEntities = certDataRepository.findAll().stream()
+//                    .collect(Collectors.toMap(CertData::getId, Function.identity()));
+//        }
 
     }
 
@@ -75,9 +75,9 @@ public class CertificateService {
             return cacheCertDataDTO;
         }
 
-        checkCertEntities();
+        certDataEntities = certDataRepository.findById(__id).orElse(null);
 
-        CertDataDTO certDataDTO = certDataMapper.toCertDataDTO(certDataEntities.get(__id));
+        CertDataDTO certDataDTO = certDataMapper.toCertDataDTO(certDataEntities);
 
         cacheService.put(CacheList.CERT_DATA_CACHE.getName(), __id, certDataDTO);
 

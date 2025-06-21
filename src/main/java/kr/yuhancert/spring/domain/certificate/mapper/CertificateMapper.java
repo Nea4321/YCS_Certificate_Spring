@@ -12,12 +12,8 @@ import java.util.List;
 public interface CertificateMapper {
     @Mapping(source = "id", target = "certificate_id")
     @Mapping(source = "certificateName", target = "certificate_name")
-    @Mapping(source = "jmcd", target = "jmcd")
+    @Mapping(source = "jmcd.jmcd", target = "jmcd")
     CertificateDTO toCertificateDTO(Certificate certificate);
     List<CertificateDTO> toCertificateDTOList(List<Certificate> __certificateList);
-
-    default String mapJmcd(NationalCert jmcd) {
-        return jmcd != null ? jmcd.getJmcd() : null;
-    }
 
 }
