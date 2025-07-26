@@ -2,7 +2,6 @@ package kr.yuhancert.spring.domain.certificate.mapper;
 
 import kr.yuhancert.spring.domain.certificate.dto.CertificateDTO;
 import kr.yuhancert.spring.domain.certificate.entity.Certificate;
-import kr.yuhancert.spring.domain.certificate.entity.NationalCert;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

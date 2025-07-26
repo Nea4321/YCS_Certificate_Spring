@@ -47,15 +47,19 @@ public class CacheConfig {
         return cacheManager;
     }
 
-    @Bean(name = "redisCacheManager")
-    public CacheManager redisCacheManager(RedisConnectionFactory connectionFactory) {
-
-        // 순수 JSON을 위한 커스텀 ObjectMapper 생성
+    @Bean
+    @Primary
+    public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return objectMapper;
+    }
+
+    @Bean(name = "redisCacheManager")
+    public CacheManager redisCacheManager(RedisConnectionFactory connectionFactory, ObjectMapper objectMapper) {
 
         RedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
 

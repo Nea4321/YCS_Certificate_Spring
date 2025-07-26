@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class CertificateService {
@@ -55,7 +53,7 @@ public class CertificateService {
 
     public List<CertificateDTO> getCertificate() {
         String CACHE_KEY_CERT = "cert";
-        List<CertificateDTO> cacheCertificate = cacheService.get(CacheList.CERT_CACHE.getName(), CACHE_KEY_CERT);
+        List<CertificateDTO> cacheCertificate = cacheService.getList(CacheList.CERT_CACHE.getName(), CACHE_KEY_CERT, CertificateDTO.class);
         if (cacheCertificate != null) {
             return cacheCertificate;
         }
@@ -70,7 +68,7 @@ public class CertificateService {
     }
 
     public CertDataDTO getCertData(Long __id) {
-        CertDataDTO cacheCertDataDTO = cacheService.get(CacheList.CERT_DATA_CACHE.getName(), __id);
+        CertDataDTO cacheCertDataDTO = cacheService.get(CacheList.CERT_DATA_CACHE.getName(), __id, CertDataDTO.class);
         if (cacheCertDataDTO != null) {
             return cacheCertDataDTO;
         }

@@ -97,7 +97,7 @@ public class DepartmentService {
     public List<DeptListDTO> getDeptList() {
 
         String CACHE_KEY_DL = "list";
-        List<DeptListDTO> cacheDeptList =cacheService.get(CacheList.DEPT_LIST_CACHE.getName(), CACHE_KEY_DL);
+        List<DeptListDTO> cacheDeptList =cacheService.getList(CacheList.DEPT_LIST_CACHE.getName(), CACHE_KEY_DL, DeptListDTO.class);
         if (cacheDeptList != null) {
             return cacheDeptList;
         }
@@ -114,7 +114,7 @@ public class DepartmentService {
     public List<DeptMapDTO> getDeptMap() {
 
         String CACHE_KEY_DM = "map";
-        List<DeptMapDTO> cacheDeptMap = cacheService.get(CacheList.DEPT_MAP_CACHE.getName(), CACHE_KEY_DM);
+        List<DeptMapDTO> cacheDeptMap = cacheService.getList(CacheList.DEPT_MAP_CACHE.getName(), CACHE_KEY_DM, DeptMapDTO.class);
         if (cacheDeptMap != null) {
             return cacheDeptMap;
         }
@@ -132,7 +132,7 @@ public class DepartmentService {
     public List<DeptMapDataDTO> getDeptMapData() {
 
         String CACHE_KEY_DMD = "data";
-        List<DeptMapDataDTO> cacheDeptMapDataDTO = cacheService.get(CacheList.DEPT_DATA_CACHE.getName(), CACHE_KEY_DMD);
+        List<DeptMapDataDTO> cacheDeptMapDataDTO = cacheService.getList(CacheList.DEPT_DATA_CACHE.getName(), CACHE_KEY_DMD, DeptMapDataDTO.class);
         if (cacheDeptMapDataDTO != null) {
             return cacheDeptMapDataDTO;
         }
