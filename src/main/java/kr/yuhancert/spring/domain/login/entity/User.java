@@ -13,7 +13,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 
-//유저 정보
+// 유저 정보
+// 해당 엔티티는 github 소셜 프로젝트에 있던 엔티티를 가져온거 나중에 DB 생기면 수정할 예정
+// 테이블 없어서 오류 생기는데 실행은 됨.
 public class User {
 
     @Id

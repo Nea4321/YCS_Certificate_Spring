@@ -19,10 +19,11 @@ public class UserService {
     private final List<SocialLoginService> loginServices;
     private final UserRepository userRepository;
     public SocialUserResponseDTO doSocialLogin(SocialLoginRequestDTO request) {
+        // 소셜 타입을 읽어서 어떤 서비스를 적용할건지 정함.
         SocialLoginService loginService = this.getLoginService(request.getSocialType());
-
+        // 위에서 적용된 서비스를 기반으로 액세스 토큰을 받아옴.
         SocialTokenDTO socialTokenDTO = loginService.getAccessToken(request.getCode());
-
+        // 얻은 액세스 토큰으로 유저 정보를 받아옴.
         SocialUserResponseDTO socialUserResponseDTO = loginService.getUserInfo(socialTokenDTO.getAccess_token());
         log.info("socialUserResponse {} ", socialUserResponseDTO.toString());
 
@@ -39,11 +40,12 @@ public class UserService {
 //            );
 //        }
 
-
+        // 리턴값으로 유저 정보에 저장될 DTO를 사용해야 하는데 DB 없어서 일단 얻은 그대로를 리턴함
         return socialUserResponseDTO;
     }
 
-
+    // 소셜 타입을 이용해 소셜 타입을 지원하는 서비스를 찾음.
+    // 소셜 타입이 없거나 이상한게 날라오면 빈 껍데기 서비스로 이동
     private SocialLoginService getLoginService(SocialType socialType) {
         for (SocialLoginService loginService : loginServices) {
             if (socialType.equals(loginService.getServiceName())) {

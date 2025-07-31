@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+///  일단 보류 나중에 쓰일거 같음
 public class LoginResponseDTO {
     private Long id;
 }

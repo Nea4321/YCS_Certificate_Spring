@@ -19,12 +19,18 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/login")
-    // 구글 로그인 창 에서 로그인 하게 되면 해당 포스트 매핑을 실행 함. (구글 오어스의 code~(클라이언트 아이디), 소셜타입 을 넘김)
-    // 이 포스트 매핑은 프론트 엔드(view) 쪽에다 리소스가 정상적으로 생성 됬음과 동시에 데이터를 넘김.
+    /**
+     * 프론트에다 유저 정보를 전해주는 곳.
+     * json 형태로 전달 (프론트에서 받는 정보를 인터페이스로 표기함)
+     * */
     public ResponseEntity<SocialUserResponseDTO> doSocialLogin(@RequestBody @Valid SocialLoginRequestDTO request) {
 
         return ResponseEntity.ok(userService.doSocialLogin(request));
     }
+
+    // 참고했던 github 프로젝트의 코드는 위에있는 postmapping 에서 프론트에다 유저 아이디를 전달해주고
+    // 프론트에서 받은 아이디는 다시 아래에 getmapping을 해서 프론트에다 유저 정보를 전달해 줌.
+    // 이렇게 만든 이유를 찾아볼려하니 DB 구현이 안돼있어서 확인이 어려움. 그래서 일단 내 생각대로 고침.
 
    /*  키를 통해 유저 정보를 가져옴
     @GetMapping("/{id}")
