@@ -26,16 +26,19 @@ public class CertificateService {
     private CertData certDataEntities;
 
 
-    public CertificateService(CacheService __cacheService,
-                              CertificateRepository __certificateRepository,
-                              CertDataRepository __certDataRepository,
-                              CertificateMapper __certificateMapper,
-                              CertDataMapper __certDataMapper) {
-        this.cacheService = __cacheService;
-        this.certificateRepository = __certificateRepository;
-        this.certDataRepository = __certDataRepository;
-        this.certificateMapper = __certificateMapper;
-        this.certDataMapper = __certDataMapper;
+    public CertificateService(
+            CacheService cacheService,
+            CertificateRepository certificateRepository,
+            CertDataRepository certDataRepository,
+
+            CertificateMapper certificateMapper,
+            CertDataMapper certDataMapper
+    ) {
+        this.cacheService = cacheService;
+        this.certificateRepository = certificateRepository;
+        this.certDataRepository = certDataRepository;
+        this.certificateMapper = certificateMapper;
+        this.certDataMapper = certDataMapper;
     }
 
     private void checkCertEntities() {
