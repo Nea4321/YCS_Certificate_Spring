@@ -2,14 +2,14 @@ package kr.yuhancert.spring.domain.login.service;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import kr.yuhancert.spring.domain.login.api.google.GoogleGetToken;
-import kr.yuhancert.spring.domain.login.api.google.GoogleGetUser;
+import kr.yuhancert.spring.infra.login.api.google.GoogleGetToken;
+import kr.yuhancert.spring.infra.login.api.google.GoogleGetUser;
 import kr.yuhancert.spring.domain.login.dto.GooGleLoginResponseDTO;
 import kr.yuhancert.spring.domain.login.dto.GoogleRequestAccessTokenDTO;
 import kr.yuhancert.spring.domain.login.dto.SocialTokenDTO;
 import kr.yuhancert.spring.domain.login.dto.SocialUserResponseDTO;
-import kr.yuhancert.spring.domain.login.type.SocialType;
-import kr.yuhancert.spring.domain.login.utils.GsonLocalDateTimeAdapter;
+import kr.yuhancert.spring.domain.login.entity.SocialType;
+import kr.yuhancert.spring.global.config.gson.GsonLocalDateTimeAdapter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -90,8 +90,9 @@ public class GoogleLoginService implements SocialLoginService {
 
         /// 객체로 변환 한 유저정보를 저장함.
         return SocialUserResponseDTO.builder()
-                .id(googleLoginResponse.getId())
+                .name(googleLoginResponse.getName())
                 .email(googleLoginResponse.getEmail())
+                .socialType(SocialType.GOOGLE)
                 .build();
     }
 

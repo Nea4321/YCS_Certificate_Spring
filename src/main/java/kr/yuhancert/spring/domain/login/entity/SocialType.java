@@ -1,4 +1,4 @@
-package kr.yuhancert.spring.domain.login.type;
+package kr.yuhancert.spring.domain.login.entity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 

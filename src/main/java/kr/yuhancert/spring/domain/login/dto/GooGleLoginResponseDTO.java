@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GooGleLoginResponseDTO {
-
-    private String id;
+    private String name;
     private String email;
 }

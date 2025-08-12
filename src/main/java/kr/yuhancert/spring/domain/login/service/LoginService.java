@@ -2,9 +2,8 @@ package kr.yuhancert.spring.domain.login.service;
 
 import kr.yuhancert.spring.domain.login.dto.SocialTokenDTO;
 import kr.yuhancert.spring.domain.login.dto.SocialUserResponseDTO;
-import kr.yuhancert.spring.domain.login.type.SocialType;
+import kr.yuhancert.spring.domain.login.entity.SocialType;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 

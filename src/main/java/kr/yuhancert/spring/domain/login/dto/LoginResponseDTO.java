@@ -1,5 +1,6 @@
 package kr.yuhancert.spring.domain.login.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,7 +10,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-///  일단 보류 나중에 쓰일거 같음
+///  로그인 했을 떄 넘어오는 정보
 public class LoginResponseDTO {
-    private Long id;
+    @NotNull
+    private String email;
+    @NotNull
+    private String password;
 }

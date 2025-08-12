@@ -1,7 +1,7 @@
 package kr.yuhancert.spring.domain.login.dto;
 
 import jakarta.validation.constraints.NotNull;
-import kr.yuhancert.spring.domain.login.type.SocialType;
+import kr.yuhancert.spring.domain.login.entity.SocialType;
 import lombok.Getter;
 import lombok.Setter;
 

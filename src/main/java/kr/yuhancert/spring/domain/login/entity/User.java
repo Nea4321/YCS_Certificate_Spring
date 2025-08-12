@@ -1,39 +1,32 @@
 package kr.yuhancert.spring.domain.login.entity;
 
 import jakarta.persistence.*;
-import kr.yuhancert.spring.domain.login.type.SocialType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@Table(name = "\"user\"") // 예약어니까 반드시 큰따옴표로 감싸야 함
 @Getter
-
-// 유저 정보
-// 해당 엔티티는 github 소셜 프로젝트에 있던 엔티티를 가져온거 나중에 DB 생기면 수정할 예정
-// 테이블 없어서 오류 생기는데 실행은 됨.
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
 
     @Id
-    @Column
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "user_id")
+    private Long userId;
 
-    @Column(length = 50)
-    private String userId;
-
-    @Column(length = 50)
-    private String userName;
-
-    @Column(length = 50)
+    @Column(name = "user_email", unique = true)
     private String userEmail;
 
-    @Column(columnDefinition = "ENUM('KAKAO', 'NAVER', 'GITHUB', 'GOOGLE', 'NORMAL') DEFAULT 'NORMAL'")
-    @Enumerated(EnumType.STRING)
-    private SocialType socialType;
+    @Column(name = "user_name", nullable = false)
+    private String userName;
 
+    @Column(name = "user_password")
+    private String userPassword;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "social_type", columnDefinition = "socialType")
+    private SocialType socialType;
 }

@@ -1,4 +1,4 @@
-package kr.yuhancert.spring.domain.login.api.google;
+package kr.yuhancert.spring.infra.login.api.google;
 
 import kr.yuhancert.spring.domain.login.dto.GoogleRequestAccessTokenDTO;
 import org.springframework.http.MediaType;

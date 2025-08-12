@@ -1,4 +1,4 @@
-package kr.yuhancert.spring.domain.login.utils;
+package kr.yuhancert.spring.global.config.gson;
 
 import com.google.gson.*;
 import java.lang.reflect.Type;

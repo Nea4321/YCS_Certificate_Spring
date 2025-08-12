@@ -1,15 +1,20 @@
 package kr.yuhancert.spring.domain.login.service;
 
+import jakarta.servlet.http.HttpServletResponse;
 import kr.yuhancert.spring.domain.login.dto.*;
 import kr.yuhancert.spring.domain.login.entity.User;
+import kr.yuhancert.spring.domain.login.entity.SocialType;
 import kr.yuhancert.spring.domain.login.repository.UserRepository;
-import kr.yuhancert.spring.domain.login.type.SocialType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -18,6 +23,9 @@ import java.util.Optional;
 public class UserService {
     private final List<SocialLoginService> loginServices;
     private final UserRepository userRepository;
+    private final JwtService jwtService;
+
+    // 소셜 로그인(구글,카카오..) 처리 로직
     public SocialUserResponseDTO doSocialLogin(SocialLoginRequestDTO request) {
         // 소셜 타입을 읽어서 어떤 서비스를 적용할건지 정함.
         SocialLoginService loginService = this.getLoginService(request.getSocialType());
@@ -27,21 +35,98 @@ public class UserService {
         SocialUserResponseDTO socialUserResponseDTO = loginService.getUserInfo(socialTokenDTO.getAccess_token());
         log.info("socialUserResponse {} ", socialUserResponseDTO.toString());
 
-//        ///  유저 db에 유저 데이터 없으면 채워 넣음.
-//        if (userRepository.findByUserId(socialUserResponseDTO.getId()).isEmpty()) {
-//            UserResponseDTO userResponseDTO = new UserResponseDTO();
-//            User user = userRepository.save(
-//                    User.builder()
-//                            .userId(userResponseDTO.getUserId())
-//                            .socialType(userResponseDTO.getSocialType())
-//                            .userEmail(userResponseDTO.getUserEmail())
-//                            .userName(userResponseDTO.getUserName())
-//                            .build()
-//            );
-//        }
+        ///  유저 db에 유저 데이터 없으면 채워 넣음.
+        if (userRepository.findByUserEmail(socialUserResponseDTO.getEmail()).isEmpty()) {
+            User user = userRepository.save(
+                    User.builder()
+                            .userEmail(socialUserResponseDTO.getEmail())
+                            .userName(socialUserResponseDTO.getName())
+                            .socialType(socialUserResponseDTO.getSocialType())
+                            .build()
+            );
+        }
 
-        // 리턴값으로 유저 정보에 저장될 DTO를 사용해야 하는데 DB 없어서 일단 얻은 그대로를 리턴함
         return socialUserResponseDTO;
+    }
+
+
+    /**
+     * 로그인 처리 관련 로직
+     *
+     * 이메일이 DB에 없거나 비번이 틀리면 에러 메시지를 리턴함.
+     * 오류 걸리는게 없으면 jwt 토큰으로 저장 후 넘김.
+     * */
+    public ResponseEntity<?> doLogin(LoginResponseDTO request, HttpServletResponse response) {
+
+        Optional<User> userOpt = userRepository.findByUserEmail(request.getEmail());
+        if (userOpt.isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("이메일 또는 비밀번호가 틀렸습니다.");
+        }
+        // 로그인한 유저 정보를 DB에서 불러옴.
+        User user = userOpt.get();
+
+        if (user.getSocialType() != SocialType.NORMAL) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("소셜 로그인 계정은 아래 소셜 로그인 버튼을 이용해 주세요.");
+        }
+
+        if (user.getUserPassword()==null || !user.getUserPassword().equals(request.getPassword())) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("이메일 또는 비밀번호가 틀렸습니다.");
+        }
+        // 유저 정보를 DB에서 가져온 후 jwt토큰 으로 저장함.
+        Map<String, String> token = Jwt_Token_Create(user.getUserName(),user.getUserEmail(),user.getSocialType(),response);
+        return ResponseEntity.ok(token);
+
+
+    }
+
+    // 회원가입 처리 관련 로직
+    public ResponseEntity<?> doSingUp(UserResponseDTO userResponseDTO) {
+        if (userRepository.findByUserEmail((userResponseDTO.getUserEmail())).isPresent()) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT) // 409 - 리소스 충돌 (db 중복 데이터)
+                    .body("이미 가입된 이메일 입니다.");
+        }
+       else {
+            User user = userRepository.save(
+                    User.builder()
+                            .userEmail(userResponseDTO.getUserEmail())
+                            .userName(userResponseDTO.getUserName())
+                            .userPassword(userResponseDTO.getUserPassword())
+                            .socialType(userResponseDTO.getSocialType())
+                            .build()
+            );
+            return ResponseEntity.status(HttpStatus.OK).body("회원 등록 되었습니다.");
+        }
+    }
+
+    // 회원 삭제 처리 관련 로직
+    public void DeleteUser(){}
+
+
+
+    // jwt 토큰 생성 관련 로직 - 토큰을 생성하는 서비스 사용, 리프레시 토큰을 쿠키로 변환하는 곳.
+    public Map<String, String> Jwt_Token_Create(String name, String email, SocialType socialType, HttpServletResponse response) {
+        // jwt 액세스,리프레시 토큰 생성
+        String accessToken = jwtService.createAccessToken(name, email, socialType);
+        String refreshToken = jwtService.createRefreshToken(email);
+
+        // 리프레시 토큰 쿠키로 변환
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
+                .httpOnly(true)
+                .secure(false)                      // true - https 환경만 전송 / false - http도 전달 가능
+                .sameSite("Lax")                // 또는 cross-site 필요시 "None"
+                .path("/")                      // 모든 경로에 쿠키 전송 가능
+                .maxAge(jwtService.get_refreshExp()/1000)  // 초 단위
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return (Map.of("accessToken", accessToken));
     }
 
     // 소셜 타입을 이용해 소셜 타입을 지원하는 서비스를 찾음.
@@ -57,15 +142,29 @@ public class UserService {
     }
 
 
-    public UserResponseDTO getUser(Long id) {
-        Optional<User> user = userRepository.findById(id);
-
-        return UserResponseDTO.builder()
-                .id(user.get().getId())
-                .userId(user.get().getUserId())
-                .userEmail(user.get().getUserEmail())
-                .userName(user.get().getUserName())
-                .build();
-    }
+/** [JWT 토큰 공부한거 적어놓는 주석]
+ *
+ *  JWT 토큰 - 헤더,페이로드(본문),서명 으로 구성되어 있음
+ *  헤더 구성은 자동으로 해준다고함 ( 타입과 알고리즘을 기재함 )
+ *  서명 부분에는 SecretKey 가 들어가고 이 SecretKey 는 바이트(바이너리)배열 의 데이터가 들어감
+ *  액세스 토큰에는 유저 정보를 페이로드에 담아서 보내고 리프레시 토큰은 페이로드에 아무것도 안 넣어도됨.
+ *  리프레시 토큰은 그저 액세스 토큰을 다시 생성하기 위해 확인하는 용도니까
+ *
+ *  액세스 토큰은 바로 리턴함 ( 토큰 값을 그대로 전달한다는 뜻 )
+ *  리프레시 토큰은 httponly cookie로 변환후 리턴함 ( withCredentials: true -> 이 명령어로 프론트에서 쿠키를 자동으로 받을 수 있음 )
+ *  근데 쿠키로 변환 할떄 오류가 발생함 (.secure() .sameSite() )
+ *
+ *  1번째 문제점. 프론트,백엔드 주소(origin)이 다르다 ( 5173, 8080 ) [ origin = 프로토콜(http) + 도메인 + 포트 ]
+ *  이유 : 쿠키는 다른 사이트 에서 기존 사이트로 이동이 불가능함 ( ex) 네이버 에서 로그인 한 후 구글 사이트 이동 하면 구글 사이트 에서는 네이버 로그인 정보를 알 수 없는 것. )
+ *  해결 : 리액트에 있는 vite_config.ts 에서 프록시 설정을 해놔서 프론트에서 백엔드 요청은 전부 8080에서 요청 한걸로 바뀜.
+ *
+ *  2번쨰 문제점. 현재 환경은 개발 환경이다 ( https 가 아닌 http를 사용중 )
+ *  이유 : .secure(true) -> https 만 사용가능,  .secure(false) -> http 도 사용가능
+ *        .sameSite(None) -> 이 쿠키는 모든 요청 허용 -> 해당 옵션은 .secure(true) 가 필수임
+ *        .sameSite(Strict) -> origin 다르면 다 차단 더 엄격 / .sameSite(Lax) -> origin 달라도 Get요청 만 쿠키 요청 허용 덜 엄격
+ *        ["Lax" 가 Get 요청만 허용하는 이유 -> 대부분 백엔드 처리에서 Get은 단순 정보 얻기, Post는 중요한 정보 처리 이기 때문에]
+ *  해결 : 프록시 설정 해놔서 프론트,백엔드 요청 주소가 같음. -> .secure(false), .sameSite(Lax) 사용 -> Strict 썼다가 오류 생길까바
+ *
+ * */
 }
 

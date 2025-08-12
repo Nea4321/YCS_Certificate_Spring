@@ -1,4 +1,4 @@
-package kr.yuhancert.spring.domain.login.config;
+package kr.yuhancert.spring.global.config.web;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
