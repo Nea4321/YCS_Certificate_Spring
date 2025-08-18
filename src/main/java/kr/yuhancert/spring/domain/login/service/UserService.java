@@ -1,5 +1,10 @@
 package kr.yuhancert.spring.domain.login.service;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import kr.yuhancert.spring.domain.login.dto.*;
 import kr.yuhancert.spring.domain.login.entity.User;
@@ -24,6 +29,7 @@ public class UserService {
     private final List<SocialLoginService> loginServices;
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final JwtKeyService jwtKeyService;
 
     // 소셜 로그인(구글,카카오..) 처리 로직
     public SocialUserResponseDTO doSocialLogin(SocialLoginRequestDTO request) {
@@ -78,6 +84,7 @@ public class UserService {
                     .status(HttpStatus.UNAUTHORIZED)
                     .body("이메일 또는 비밀번호가 틀렸습니다.");
         }
+
         // 유저 정보를 DB에서 가져온 후 jwt토큰 으로 저장함.
         Map<String, String> token = Jwt_Token_Create(user.getUserName(),user.getUserEmail(),user.getSocialType(),response);
         return ResponseEntity.ok(token);
@@ -105,9 +112,22 @@ public class UserService {
         }
     }
 
+    //리프레시 토큰 삭제 ( 그냥 토큰 만료시간 0으로 만드는거임 )
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
+                .httpOnly(true)
+                .secure(false)                      // true - https 환경만 전송 / false - http도 전달 가능
+                .sameSite("Lax")                // 또는 cross-site 필요시 "None"
+                .path("/")                      // 모든 경로에 쿠키 전송 가능
+                .maxAge(0)  // 초 단위
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok("리프레시 토큰 삭제 완료");
+    }
+
     // 회원 삭제 처리 관련 로직
     public void DeleteUser(){}
-
 
 
     // jwt 토큰 생성 관련 로직 - 토큰을 생성하는 서비스 사용, 리프레시 토큰을 쿠키로 변환하는 곳.
@@ -129,6 +149,50 @@ public class UserService {
         return (Map.of("accessToken", accessToken));
     }
 
+
+    /**
+     * 리프레시 토큰 체크하는 로직
+     *
+     * 현재 생각하는 문제점
+     * 1. 이 로직은 액세스 토큰이 만료될 때 마다 실행되는 로직임(10분)
+     * 2. 즉 10분 마다 쿠키를 읽고 DB를 조회함 ( DB 조회하는게 부담이 클 듯 )
+     * 3. 여러명이 10분마다 유저 DB를 조회 한 다면 서버쪽 과부화가 생길 문제 가 있음..
+     * 4. 물론 졸작이고 사용하는 사람은 거의 없겠지만 교수님이 지적하거나 사용하는 유저가 많아지면...
+     * 5. Redis 쿠키를 사용해서 DB 조회 부담을 줄이는게 대응책일듯 (현재 나는 Redis 1도 모르는 상태임 )
+     * */
+    public ResponseEntity<?> checkRefreshToken(HttpServletRequest request) {
+        try {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (cookie.getName().equals("refresh_token")) {
+                        String refreshToken = cookie.getValue();
+
+                        Claims claims = jwtService.parseClaims(refreshToken, jwtKeyService.getRefreshSecretKey());
+                        String email = claims.getSubject();
+
+                        User user = userRepository.findByUserEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                        String name = user.getUserName();
+                        SocialType socialType = user.getSocialType();
+                        String accessToken = jwtService.createAccessToken(name, email, socialType);
+
+                        return ResponseEntity.ok(Map.of("accessToken", accessToken));
+                    }
+                }
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("리프레시 토큰을 찾기 못했습니다.");
+        }
+        catch (ExpiredJwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("리프레시 토큰 만료시간이 지났습니다.");
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("토큰이 유효하지 않습니다");
+        }
+    }
+
+
+
     // 소셜 타입을 이용해 소셜 타입을 지원하는 서비스를 찾음.
     // 소셜 타입이 없거나 이상한게 날라오면 빈 껍데기 서비스로 이동
     private SocialLoginService getLoginService(SocialType socialType) {
@@ -140,6 +204,9 @@ public class UserService {
         }
         return new LoginService();
     }
+
+
+
 
 
 /** [JWT 토큰 공부한거 적어놓는 주석]
@@ -160,10 +227,15 @@ public class UserService {
  *
  *  2번쨰 문제점. 현재 환경은 개발 환경이다 ( https 가 아닌 http를 사용중 )
  *  이유 : .secure(true) -> https 만 사용가능,  .secure(false) -> http 도 사용가능
- *        .sameSite(None) -> 이 쿠키는 모든 요청 허용 -> 해당 옵션은 .secure(true) 가 필수임
+ *        .sameSite(None) -> 이 쿠키는 모든 요청 허용 -> 해당 옵션은 .secure(true) 가 필수임  -> 현재 개발 환경은 사용 불가
  *        .sameSite(Strict) -> origin 다르면 다 차단 더 엄격 / .sameSite(Lax) -> origin 달라도 Get요청 만 쿠키 요청 허용 덜 엄격
  *        ["Lax" 가 Get 요청만 허용하는 이유 -> 대부분 백엔드 처리에서 Get은 단순 정보 얻기, Post는 중요한 정보 처리 이기 때문에]
  *  해결 : 프록시 설정 해놔서 프론트,백엔드 요청 주소가 같음. -> .secure(false), .sameSite(Lax) 사용 -> Strict 썼다가 오류 생길까바
+ *
+ *  헷갈렸던거 : 현재 프론트 에서 f12 하면 쿠키 값으로 리프레시 토큰 값이 보임 -> 월래 httponly cookie는 f12에서 보이면 안 됨 ( 서버에서 관리하는 쿠키니까 )
+ *  -> 내가 설정했던 .secure(false) 이건 개발환경 이기 때문에 f12 눌러도 쿠키 값이 보임
+ *  -> 해당 쿠키 에 있는 리프레시 토큰 값을 js로 사용하려 하면 차단됨 ( .document.cookie() 로 사용하면 차단 된다는 뜻 )
+ *  -> 아마 배포 상태 (완성 하고 https 사용할 떄 ) 는 f12 눌러도 쿠키 값에 리프레시 토큰 값은 안 보일거임.
  *
  * */
 }

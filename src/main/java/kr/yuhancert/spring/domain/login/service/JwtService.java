@@ -20,7 +20,7 @@ public class JwtService {
         this.jwt_refresh_key = jwtKeyService.getRefreshSecretKey();
     }
 
-    private final static long accessExpireTime = 1000 * 60 * 10;   // 액세스 토큰 만료시간 : 10분
+    private final static long accessExpireTime = 1000 *  10 ;   // 액세스 토큰 만료시간 : 10분으로 설정할건데 gi테스트 용으로 10초로 설정함.
     private final static long refreshExpireTime = 1000L * 60 * 60 * 24 * 30;   // 리프레시 토큰 만료시간 : 30일
     public long get_accessExp(){return accessExpireTime;}
     public long get_refreshExp(){return refreshExpireTime;}
@@ -93,14 +93,10 @@ public class JwtService {
         }
     }
 
-    /** 액세스 코드 검증하는 메서드 */
-    public void validateAccessToken(String accessToken) {
-        parseClaims(accessToken, jwt_access_key);
-    }
 
     /** 리프레시 코드 검증하는 메서드 */
     public void validateRefreshToken(String refreshToken) {
-        parseClaims(refreshToken, jwt_refresh_key);
+            parseClaims(refreshToken, jwt_refresh_key);
     }
 
 }

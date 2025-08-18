@@ -1,5 +1,6 @@
 package kr.yuhancert.spring.domain.login.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import kr.yuhancert.spring.domain.login.dto.LoginResponseDTO;
@@ -47,5 +48,14 @@ public class UserController {
         return userService.doSingUp(request);
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<?> checkRefreshToken(HttpServletRequest request) {
+        return userService.checkRefreshToken(request);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> RefreshTokenDelete(HttpServletResponse request) {
+        return userService.logout(request);
+    }
 
 }
