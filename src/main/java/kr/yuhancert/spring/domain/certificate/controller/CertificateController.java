@@ -19,20 +19,12 @@ import java.util.Map;
 @RequestMapping("api/cert")
 public class CertificateController {
     private final CertificateService certificateService;
-    @Autowired
-    private EngineRunner engineRunner;
-
-    @Autowired
-    private JsonCertificateParser jsonCertificateParser;
 
     private final Logger logger = (Logger) LoggerFactory.getLogger(this.getClass());
     private Map<String, String> errorResponse = new HashMap<>();
 
-    public CertificateController(CertificateService __certificateService
-    , EngineRunner __engineRunner, JsonCertificateParser __jsonCertificateParser) {
+    public CertificateController(CertificateService __certificateService) {
         this.certificateService = __certificateService;
-        this.engineRunner = __engineRunner;
-        this.jsonCertificateParser = __jsonCertificateParser;
     }
 
     @GetMapping("/list")
@@ -73,16 +65,15 @@ public class CertificateController {
 
     // ✅ 1. 전체: 파이썬 실행 + JSON 저장 한꺼번에
     //1번째: 내가 손 댄 곳 -> 파이썬 실행하고 json 저장까지 다 하는 것
-    @PostMapping("/run-and-load")
-    public ResponseEntity<String> runAndLoad() {
-        try {
-            engineRunner.runLinuxMasterScript();
-            jsonCertificateParser.parseAndSave();
-            return ResponseEntity.ok("✔ 크롤링 + JSON 저장 전체 성공");
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("❌ 전체 실패: " + e.getMessage());
-        }
+    @PostMapping("/run/{certId}")
+    public ResponseEntity<String> runById(@PathVariable Long certId) throws Exception {
+        certificateService.runCertificate(certId);
+        return ResponseEntity.ok("✅ 자격증 실행 완료 (certId: " + certId + ")");
     }
 
-
+    @PostMapping("/run-fallback")
+    public ResponseEntity<String> runByFallback(@RequestParam String certName) throws Exception {
+        certificateService.runFallback(certName);
+        return ResponseEntity.ok("✅ fallback 자격증 실행 완료 (name: " + certName + ")");
+    }
 }

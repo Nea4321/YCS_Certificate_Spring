@@ -7,6 +7,10 @@ import kr.yuhancert.spring.domain.certificate.mapper.CertificateMapper;
 import kr.yuhancert.spring.domain.certificate.repository.*;
 import kr.yuhancert.spring.global.cache.service.CacheService;
 import kr.yuhancert.spring.global.cache.util.CacheList;
+import kr.yuhancert.spring.infra.config.CertConfig;
+import kr.yuhancert.spring.infra.config.CertConfigRegistry;
+import kr.yuhancert.spring.infra.crawling.engine.EngineRunner;
+import kr.yuhancert.spring.infra.crawling.manager.CertificateExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,6 +28,10 @@ public class CertificateService {
     private final CertDataMapper certDataMapper;
     private List<Certificate> certificateEntities;
     private CertData certDataEntities;
+    private final CertConfigRegistry configRegistry;
+    private final EngineRunner engineRunner;
+    private final JsonCertificateParser parser;
+    private final CertificateExecutor executor;
 
 
     public CertificateService(
@@ -32,13 +40,21 @@ public class CertificateService {
             CertDataRepository certDataRepository,
 
             CertificateMapper certificateMapper,
-            CertDataMapper certDataMapper
+            CertDataMapper certDataMapper,
+            CertConfigRegistry certConfigRegistry,
+            EngineRunner engineRunner,
+            JsonCertificateParser parser,
+            CertificateExecutor executor
     ) {
         this.cacheService = cacheService;
         this.certificateRepository = certificateRepository;
         this.certDataRepository = certDataRepository;
         this.certificateMapper = certificateMapper;
         this.certDataMapper = certDataMapper;
+        this.configRegistry = certConfigRegistry;
+        this.engineRunner = engineRunner;
+        this.parser = parser;
+        this.executor = executor;
     }
 
     private void checkCertEntities() {
@@ -84,5 +100,14 @@ public class CertificateService {
 
         return certDataDTO;
     }
+
+    public void runCertificate(Long certId) throws Exception {
+        executor.runAndSave(certId, null);
+    }
+
+    public void runFallback(String certName) throws Exception {
+        executor.runAndSave(null, certName);
+    }
+
 
 }
