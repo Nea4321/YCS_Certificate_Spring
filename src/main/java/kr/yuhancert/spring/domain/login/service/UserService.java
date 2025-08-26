@@ -17,19 +17,26 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor  // final 로 선언된 것 들 생성자 자동 으로 등록함.
 @Slf4j
 public class UserService {
     private final List<SocialLoginService> loginServices;
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final JwtKeyService jwtKeyService;
+
+    public UserService(UserRepository userRepository,JwtService jwtService, JwtKeyService jwtKeyService, List<SocialLoginService> loginServices) {
+        this.loginServices = loginServices;
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;
+        this.jwtKeyService = jwtKeyService;
+    }
 
     // 소셜 로그인(구글,카카오..) 처리 로직
     public SocialUserResponseDTO doSocialLogin(SocialLoginRequestDTO request) {
@@ -158,7 +165,7 @@ public class UserService {
      * 2. 즉 10분 마다 쿠키를 읽고 DB를 조회함 ( DB 조회하는게 부담이 클 듯 )
      * 3. 여러명이 10분마다 유저 DB를 조회 한 다면 서버쪽 과부화가 생길 문제 가 있음..
      * 4. 물론 졸작이고 사용하는 사람은 거의 없겠지만 교수님이 지적하거나 사용하는 유저가 많아지면...
-     * 5. Redis 쿠키를 사용해서 DB 조회 부담을 줄이는게 대응책일듯 (현재 나는 Redis 1도 모르는 상태임 )
+     * 5. Redis 쿠키를 사용해서 DB 조회 부담을 줄이는게 대응책일듯 (Redis 1도 모름)
      * */
     public ResponseEntity<?> checkRefreshToken(HttpServletRequest request) {
         try {

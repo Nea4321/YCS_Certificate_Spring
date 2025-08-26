@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import kr.yuhancert.spring.infra.login.api.google.GoogleGetToken;
 import kr.yuhancert.spring.infra.login.api.google.GoogleGetUser;
-import kr.yuhancert.spring.domain.login.dto.GooGleLoginResponseDTO;
+import kr.yuhancert.spring.domain.login.dto.SocialLoginResponseDTO;
 import kr.yuhancert.spring.domain.login.dto.GoogleRequestAccessTokenDTO;
 import kr.yuhancert.spring.domain.login.dto.SocialTokenDTO;
 import kr.yuhancert.spring.domain.login.dto.SocialUserResponseDTO;
@@ -20,11 +20,14 @@ import java.time.LocalDateTime;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class GoogleLoginService implements SocialLoginService {
     private final GoogleGetToken googleGetToken;
     private final GoogleGetUser googleGetUser;
 
+    public GoogleLoginService(GoogleGetToken googleGetToken, GoogleGetUser googleGetUser) {
+        this.googleGetToken = googleGetToken;
+        this.googleGetUser = googleGetUser;
+    }
     @Value("${google_client_id}")
     private String googleAppKey;
     @Value("${google_client_password}")
@@ -86,7 +89,7 @@ public class GoogleLoginService implements SocialLoginService {
                 .create(); //gson 생성 -> 이 gson은 위 설정으로 재탄생함.
 
         /// 구글에서 받아 온 json 형태의 유저 정보를 GoogleLogin~~ 객체로 변환함
-        GooGleLoginResponseDTO googleLoginResponse = gson.fromJson(jsonString, GooGleLoginResponseDTO.class);
+        SocialLoginResponseDTO googleLoginResponse = gson.fromJson(jsonString, SocialLoginResponseDTO.class);
 
         /// 객체로 변환 한 유저정보를 저장함.
         return SocialUserResponseDTO.builder()

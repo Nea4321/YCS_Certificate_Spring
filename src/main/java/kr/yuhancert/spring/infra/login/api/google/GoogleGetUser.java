@@ -1,34 +1,20 @@
 package kr.yuhancert.spring.infra.login.api.google;
 
-import kr.yuhancert.spring.domain.login.dto.GoogleRequestAccessTokenDTO;
-import kr.yuhancert.spring.domain.login.dto.SocialTokenDTO;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 @Service
 public class GoogleGetUser {
 
     private final WebClient webClient;
 
-    public GoogleGetUser(WebClient.Builder webClientBuilder) {
-
-        /**
-         * WebClient 설정 메서드
-         *  .baseUrl - 기본 요청 URL 설정
-         *  → .url("/abc") → https://www.googleapis.com/abc 로 요청됨
-         *
-         *  .defaultHeader() - 요청 헤더에 본문 데이터 타입(JSON)을 명시
-         *  → "내가 보내는 본문은 JSON 형식이야"라고 서버에 알려줌
-         */
-        this.webClient = WebClient.builder()
-                .baseUrl("https://www.googleapis.com")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .build();
-    }
+       public GoogleGetUser(@Qualifier("googleAuth") WebClient.Builder webClientBuilder) {
+           this.webClient = webClientBuilder.build();
+       }
 
     /**
      * 액세스 토큰으로 유저 정보를 받아오는 함수

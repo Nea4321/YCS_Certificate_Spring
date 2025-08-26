@@ -1,6 +1,7 @@
 package kr.yuhancert.spring.infra.login.api.google;
 
 import kr.yuhancert.spring.domain.login.dto.GoogleRequestAccessTokenDTO;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,8 +13,8 @@ public class GoogleGetToken {
 
     private final WebClient webClient;
 
-    public GoogleGetToken(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.baseUrl("https://oauth2.googleapis.com").build();
+    public GoogleGetToken(@Qualifier("googleAccess") WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.build();
     }
 
     /**
