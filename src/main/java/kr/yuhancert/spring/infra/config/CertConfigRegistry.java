@@ -68,8 +68,26 @@ public class CertConfigRegistry {
                 jsonBase.resolve("Cs_Leader_full.json").toString(),
                 "CS_Leaders"
         ));
-    }
 
+        fallbackConfigs.put("gtq", new CertConfig(
+                runner,
+                jsonBase.resolve("gtq_full.json").toString(),
+                "gtq"
+        ));
+
+        fallbackConfigs.put("erp_information", new CertConfig(
+                runner,
+                jsonBase.resolve("erp_information_full.json").toString(),
+                "erp_information"
+        ));
+
+        fallbackConfigs.put("itq", new CertConfig(
+                runner,
+                jsonBase.resolve("itq_full.json").toString(),
+                "itq"
+        ));
+        //이쪽은 하드코딩이어서 나중에 고칠수 있음
+    }
 
     public CertConfig get(Long certId) {
         return configRegistry.get(certId);

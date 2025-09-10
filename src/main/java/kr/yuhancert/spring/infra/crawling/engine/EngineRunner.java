@@ -14,27 +14,34 @@ import java.util.*;
 @RequiredArgsConstructor
 public class EngineRunner {
 
-    /** C안(venv) 고정: application.properties에서 경로 지정. 비워두면 B안으로 폴백 */
-    @Value("${python.path:}")
-    private String pythonPath;
+    @Value("${python.path:}")  private String pythonPath;
+    @Value("${python.args:-X utf8}") private String pythonArgs;
 
-    /** 공통 실행 인자:  application.properties에 있지만 안전하게 쓰기 위해 씀*/
-    @Value("${python.args:-X utf8}")
-    private String pythonArgs;
+    @Value("${engine.script:../Engine/run_once.py}")   private String engineScript;
+    @Value("${engine.config:}")                         private String engineConfig; // 없으면 미전달
 
-    public void run(String scriptPath, String certName, String jsonPath)
+    public void run(String certName, String jsonPath)
             throws IOException, InterruptedException {
-        if (jsonPath == null || jsonPath.isBlank()) {
+        run(engineScript, engineConfig, certName, jsonPath);
+    }
+
+    /** 내부 공용 실행기 */
+    public void run(String scriptPath, String configPath, String certName, String jsonPath)
+            throws IOException, InterruptedException {
+
+        if (jsonPath == null || jsonPath.isBlank())
             throw new IllegalArgumentException("jsonPath 가 비어있습니다.");
-        }
+
         Files.createDirectories(Path.of(jsonPath).getParent());
 
         List<String> cmd = new ArrayList<>(resolvePythonCmd());
-        if (pythonArgs != null && !pythonArgs.isBlank()) {
+        if (pythonArgs != null && !pythonArgs.isBlank())
             cmd.addAll(Arrays.asList(pythonArgs.trim().split("\\s+")));
-        }
 
         cmd.add(scriptPath);
+        if (configPath != null && !configPath.isBlank()) { // ★ --config 전달
+            cmd.add("--config"); cmd.add(configPath);
+        }
         cmd.add("--cert"); cmd.add(certName);
         cmd.add("--out");  cmd.add(jsonPath);
 
@@ -42,28 +49,24 @@ public class EngineRunner {
         pb.redirectErrorStream(true);
         pb.environment().putIfAbsent("PYTHONIOENCODING", "utf-8");
 
-        // run_once.py가 루트에 있으므로, CWD를 루트로 고정(상대경로 안전)
+        // run_once.py가 있는 폴더(Engine 루트)로 CWD 고정
         pb.directory(Path.of(scriptPath).getParent().toFile());
 
         System.out.println("[EngineRunner] Run: " + String.join(" ", cmd));
         Process process = pb.start();
 
         StringBuilder outBuf = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(
+        try (BufferedReader r = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
+            for (String line; (line = r.readLine()) != null; )
                 outBuf.append(line).append(System.lineSeparator());
-                System.out.println("[Python] " + line);
-            }
         }
 
         int exit = process.waitFor();
         System.out.println("📦 종료 코드: " + exit);
-        if (exit != 0) {
+        if (exit != 0)
             throw new IllegalStateException("Python process exited with code " + exit
                     + "\n--- python output ---\n" + outBuf);
-        }
     }
 
 
@@ -105,11 +108,5 @@ public class EngineRunner {
         } catch (Exception e) {
             return false;
         }
-    }
-
-
-    // 레거시 시그니처는 막아두기(그대로 유지해도 됨)
-    public void run(String scriptPath, String jsonPath) {
-        throw new IllegalArgumentException("run(scriptPath, jsonPath) 대신 run(scriptPath, certName, jsonPath)를 사용하세요.");
     }
 }
