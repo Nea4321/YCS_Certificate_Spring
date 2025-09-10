@@ -10,7 +10,6 @@ import lombok.Setter;
 @Table(name = "cert_data")
 public class CertData {
 
-
     @Id
     @Column(name = "certificate_id", nullable = false)
     private Long id;
