@@ -33,7 +33,7 @@ public class UserController {
         SocialUserResponseDTO user = userService.doSocialLogin(request);
 
         return ResponseEntity.ok(
-                userService.Jwt_Token_Create( user.getName(), user.getEmail(),user.getSocialType(), response)
+                userService.Jwt_Token_Create( user.getName(), user.getEmail(), user.getSocialType(), user.getRole(), response)
         );
     }
 

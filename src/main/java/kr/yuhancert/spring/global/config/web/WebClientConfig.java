@@ -59,7 +59,7 @@ public class WebClientConfig {
     @Qualifier("kakaoAccess")
     public WebClient.Builder kakaoAccess() {
         return WebClient.builder()
-                .baseUrl("https://kauth.kakao.com/oauth");
+                .baseUrl("https://kauth.kakao.com");
     }
 
     @Bean
@@ -69,7 +69,6 @@ public class WebClientConfig {
                 .baseUrl("https://kapi.kakao.com")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
     }
-
 
     @Bean
     @Qualifier("naverAccess")

@@ -4,7 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "\"user\"") // 예약어니까 반드시 큰따옴표로 감싸야 함
+@Table(name = "\"user\"") // PostgreSQL에서 user는 예약어라서 쌍따옴표 필요
+@IdClass(UserId.class)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -13,12 +14,13 @@ import lombok.*;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Long userId;
-
-    @Column(name = "user_email", unique = true)
+    @Column(name = "user_email", nullable = false)
     private String userEmail;
+
+    @Id
+    @Enumerated(EnumType.STRING)
+    @Column(name = "social_type", nullable = false)
+    private SocialType socialType;
 
     @Column(name = "user_name", nullable = false)
     private String userName;
@@ -26,7 +28,6 @@ public class User {
     @Column(name = "user_password")
     private String userPassword;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "social_type", columnDefinition = "socialType")
-    private SocialType socialType;
+    @Column(name = "user_role", nullable = false)
+    private String userRole = "normal";
 }
