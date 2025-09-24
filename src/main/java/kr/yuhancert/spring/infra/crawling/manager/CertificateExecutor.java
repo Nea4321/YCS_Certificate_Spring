@@ -7,6 +7,8 @@ import kr.yuhancert.spring.infra.crawling.engine.EngineRunner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+
 @Component
 @RequiredArgsConstructor
 public class CertificateExecutor {
@@ -22,16 +24,18 @@ public class CertificateExecutor {
         String jsonPath, certName;
 
         if (certId != null) {
-            CertConfig config = configRegistry.get(certId);
-            if (config == null) throw new IllegalArgumentException("❌ config 없음: " + certId);
+            CertConfig cfg = configRegistry.get(certId);
+            if (cfg == null) throw new IllegalArgumentException("❌ config 없음: " + certId);
 
-            jsonPath   = config.getJsonPath();
-            certName   = config.getCertName();
-
-            System.out.println("✅ config 존재. certId: " + certId);
-            engineRunner.run(certName, jsonPath);
-            parser.parseAndSave(jsonPath, certId);
-
+            engineRunner.run(
+                    cfg.getScriptPath(),
+                    null,
+                    cfg.getCertName(),
+                    cfg.getJsonPath(),
+                    cfg.getExtraArgs() == null ? Collections.emptyList() : cfg.getExtraArgs()
+            );
+            parser.parseAndSave(cfg.getJsonPath(), certId);
+            return;
         } else {
             CertConfig fallback = configRegistry.getFallback(fallbackKeyIfNoId);
             if (fallback == null) throw new IllegalStateException("❌ fallback도 없음: " + fallbackKeyIfNoId);

@@ -98,14 +98,11 @@ class ProductionWebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         logger.info("Applying CORS configuration for PRODUCTION environment");
-        //요청 보내는 모든 경로 URL( ex) api/user ) 허용
         registry.addMapping("/**")
                 .allowedOrigins(frontendUrls.split(","))
                 .allowedMethods(allowedMethods.split(","))
                 .allowedHeaders("*")
                 .allowCredentials(true)
-                //프론트 요청이 들어오면 백엔드는 확인차 물어보는 작업을 실시함.
-                //아래 3600초(1시간) 동안 똑같은 도메인으로 요청이 들어오면 백엔드에서 물어보는 작업 미실시 -> 성능향상
                 .maxAge(maxAge); // 브라우저가 preflight 요청 결과를 캐시하는 시간(초)
     }
 }

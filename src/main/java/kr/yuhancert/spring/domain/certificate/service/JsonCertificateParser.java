@@ -2,71 +2,98 @@ package kr.yuhancert.spring.domain.certificate.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import kr.yuhancert.spring.domain.certificate.entity.CertData;
 import kr.yuhancert.spring.domain.certificate.entity.Certificate;
+import kr.yuhancert.spring.domain.certificate.entity.NationalCert;
 import kr.yuhancert.spring.domain.certificate.repository.CertDataRepository;
+import kr.yuhancert.spring.domain.certificate.repository.CertificateRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Optional;
 
-//2번째 json 저장할 위치와 어떤 식으로 구분해서 저장할지와 데이터베이스 안에 넣을것까지의 과정
 @Service
 @RequiredArgsConstructor
 public class JsonCertificateParser {
 
     private final CertDataRepository certDataRepository;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final CertificateRepository certificateRepository;
+    private final ObjectMapper objectMapper; // 스프링 빈 주입
 
     @PersistenceContext
-    private EntityManager entityManager; // ← 추가
-
+    private final EntityManager em;
 
     /** JSON 존재/형식만 검증 (DB 저장 안 함) */
     public void parseJsonOnly(String jsonPath) throws IOException {
-        File jsonFile = new File(jsonPath);
-        if (!jsonFile.exists()) {
+        Path p = Path.of(jsonPath);
+        if (Files.notExists(p)) {
             throw new FileNotFoundException("❌ JSON 파일이 존재하지 않습니다: " + jsonPath);
         }
-        // 최소 검증
-        mapper.readTree(jsonFile);
+        // 파일 핸들 잠김 회피: 바이트로 읽어 파싱
+        byte[] bytes = Files.readAllBytes(p);
+        objectMapper.readTree(bytes);
         System.out.println("✅ JSON 파싱/검증 완료(저장 생략): " + jsonPath);
     }
 
-    /** certId 1행에 '전체 JSON'을 통째로 저장 (섹션별 다중 insert 없음) */
+    /**
+     * JSON 파일을 읽어 cert_data( PK = certId )에 업서트.
+     * - _meta.name / _meta.jmcd / _meta.cert_id 주입/보강
+     * - 기존 행이 있으면 update, 없으면 insert
+     */
     @Transactional
     public void parseAndSave(String jsonPath, Long certId) throws IOException {
-        if (certId == null) {
-            throw new IllegalArgumentException("certId가 null 입니다. DB 저장 불가");
+        if (certId == null) throw new IllegalArgumentException("certId가 null 입니다.");
+
+        Path p = Path.of(jsonPath);
+        if (Files.notExists(p)) throw new FileNotFoundException("JSON 파일 없음: " + jsonPath);
+
+        // 1) JSON 읽기 (파일 핸들 잠김 회피)
+        byte[] bytes = Files.readAllBytes(p);
+        JsonNode root = objectMapper.readTree(bytes);
+
+        // 1-1) 최상위가 객체가 아닐 수도 있으니 ObjectNode로 확보
+        final ObjectNode obj;
+        if (root instanceof ObjectNode) {
+            obj = (ObjectNode) root;
+        } else {
+            obj = objectMapper.createObjectNode();
+            obj.set("data", root);
         }
 
-        File jsonFile = new File(jsonPath);
-        if (!jsonFile.exists()) {
-            throw new FileNotFoundException("❌ JSON 파일이 존재하지 않습니다: " + jsonPath);
+        // 2) 인증서 정보
+        Certificate cert = certificateRepository.findById(certId)
+                .orElseThrow(() -> new IllegalArgumentException("no certificate: " + certId));
+
+        String certName = Optional.ofNullable(cert.getCertificateName()).orElse("");
+        NationalCert nc = cert.getJmcd();
+        String jmcd = (nc != null) ? Optional.ofNullable(nc.getJmcd()).orElse("") : "";
+
+        // 3) _meta 보강/주입
+        ObjectNode meta = obj.with("_meta");  // 없으면 생성
+        meta.put("name", certName);
+        if (!jmcd.isBlank()) meta.put("jmcd", jmcd);
+        meta.put("cert_id", certId);
+
+        // 4) 업서트
+        CertData entity = certDataRepository.findById(certId).orElse(null);
+        if (entity == null) {
+            entity = new CertData();
+            entity.setId(certId); // 공유 PK 구조
+            entity.setCertificate(em.getReference(Certificate.class, certId));
         }
+        entity.setInfogb("public_norm_v1");
+        entity.setContents(obj.toString());
 
-        JsonNode root = mapper.readTree(jsonFile);
-
-        // 기존 행 삭제 (PK=certId 기준 1행)
-        if(certDataRepository.existsById(certId)) {
-            certDataRepository.deleteById(certId);
-        }
-
-        // ★ 핵심: 한 행에 전체 JSON을 그대로 저장
-        CertData row = new CertData();
-        row.setId(certId);                 // ← 현재 스키마 유지 (PK=certId)
-        row.setCertificate(entityManager.getReference(Certificate.class, certId)); // ← 중요
-        row.setInfogb("FULL");             // 구분용 태그(원하면 "JSON" 등으로)
-        row.setContents(root.toString());  // 전체 JSON 문자열
-        certDataRepository.save(row);
-
-        System.out.println("✅ DB 저장 완료 (단일 행 FULL JSON). certId=" + certId);
+        certDataRepository.save(entity);
     }
+
 }

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,54 +38,63 @@ public class CertConfigRegistry {
         fallbackConfigs.put("linux_master", new CertConfig(
                 runner,
                 jsonBase.resolve("linux_master_full.json").toString(),
-                "linux_master"
+                "linux_master",
+                Collections.emptyList()          // ← 추가
         ));
 
         fallbackConfigs.put("digital_information", new CertConfig(
                 runner,
                 jsonBase.resolve("digital_information_full.json").toString(),
-                "digital_information"
+                "digital_information",
+                Collections.emptyList()          // ← 추가
         ));
 
         fallbackConfigs.put("coding_ability", new CertConfig(
                 runner,
                 jsonBase.resolve("coding_ability_full.json").toString(),
-                "coding_ability"
+                "coding_ability",
+                Collections.emptyList()          // ← 추가
         ));
 
         fallbackConfigs.put("Computerized_tax_accounting", new CertConfig(
                 runner,
                 jsonBase.resolve("Computerized_tax_accounting_full.json").toString(),
-                "Computerized_tax_accounting"
+                "Computerized_tax_accounting",
+                Collections.emptyList()          // ← 추가
         ));
         fallbackConfigs.put("barista", new CertConfig(
                 runner,
                 jsonBase.resolve("barista_full.json").toString(),
-                "barista"
+                "barista",
+                Collections.emptyList()          // ← 추가
         ));
 
         fallbackConfigs.put("CS_Leaders", new CertConfig(
                 runner,
                 jsonBase.resolve("Cs_Leader_full.json").toString(),
-                "CS_Leaders"
+                "CS_Leaders",
+                Collections.emptyList()          // ← 추가
         ));
 
         fallbackConfigs.put("gtq", new CertConfig(
                 runner,
                 jsonBase.resolve("gtq_full.json").toString(),
-                "gtq"
+                "gtq",
+                Collections.emptyList()          // ← 추가
         ));
 
         fallbackConfigs.put("erp_information", new CertConfig(
                 runner,
                 jsonBase.resolve("erp_information_full.json").toString(),
-                "erp_information"
+                "erp_information",
+                Collections.emptyList()          // ← 추가
         ));
 
         fallbackConfigs.put("itq", new CertConfig(
                 runner,
                 jsonBase.resolve("itq_full.json").toString(),
-                "itq"
+                "itq",
+                Collections.emptyList()          // ← 추가
         ));
         //이쪽은 하드코딩이어서 나중에 고칠수 있음
     }

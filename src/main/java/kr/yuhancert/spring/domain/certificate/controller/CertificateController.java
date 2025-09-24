@@ -63,17 +63,21 @@ public class CertificateController {
         }
     }
 
-    // ✅ 1. 전체: 파이썬 실행 + JSON 저장 한꺼번에
-    //1번째: 내가 손 댄 곳 -> 파이썬 실행하고 json 저장까지 다 하는 것
-    @PostMapping("/run/{certId}")
-    public ResponseEntity<String> runById(@PathVariable Long certId) throws Exception {
-        certificateService.runCertificate(certId);
-        return ResponseEntity.ok("✅ 자격증 실행 완료 (certId: " + certId + ")");
-    }
-
     @PostMapping("/run-fallback")
     public ResponseEntity<String> runByFallback(@RequestParam String certName) throws Exception {
         certificateService.runFallback(certName);
         return ResponseEntity.ok("✅ fallback 자격증 실행 완료 (name: " + certName + ")");
     }
+
+    // kr/yuhancert/spring/domain/certificate/controller/CertificateController.java
+
+    // ✅ 1. 전체: 파이썬 실행 + JSON 저장 한꺼번에
+    //1번째: 내가 손 댄 곳 -> 파이썬 실행하고 json 저장까지 다 하는 친구
+    @PostMapping("/run-public/{certId}")
+    public ResponseEntity<String> runPublic(@PathVariable Long certId) throws Exception {
+        certificateService.runPublicById(certId);
+        return ResponseEntity.ok("✅ run_public 완료 (certId=" + certId + ")");
+    }
+
+
 }
