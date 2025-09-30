@@ -3,8 +3,10 @@ package kr.yuhancert.spring.domain.department.service;
 import kr.yuhancert.spring.domain.department.dto.DeptListDTO;
 import kr.yuhancert.spring.domain.department.dto.DeptMapDTO;
 import kr.yuhancert.spring.domain.department.dto.DeptMapDataDTO;
+import kr.yuhancert.spring.domain.department.dto.FacultyandDepartmentDTO;
 import kr.yuhancert.spring.domain.department.entity.*;
 import kr.yuhancert.spring.domain.department.mapper.DeptListMapper;
+import kr.yuhancert.spring.domain.department.mapper.FacultyDepartmentMapper;
 import kr.yuhancert.spring.domain.department.mapper.DeptMapDataMapper;
 import kr.yuhancert.spring.domain.department.mapper.DeptMapMapper;
 import kr.yuhancert.spring.domain.department.repository.*;
@@ -36,6 +38,7 @@ public class DepartmentService {
     private List<DeptCert> deptCertEntities;
     private final DeptMapMapper deptMapMapper;
     private final DeptListMapper deptListMapper;
+    private final FacultyDepartmentMapper facultyDepartmentMapper;
     private final DeptMapDataMapper deptMapDataMapper;
     Logger logger = LoggerFactory.getLogger(DepartmentService.class);
 
@@ -49,6 +52,7 @@ public class DepartmentService {
                              DeptCertRepository __deptCertRepository,
                              DeptMapMapper __deptMapMapper,
                              DeptListMapper __deptListMapper,
+                             FacultyDepartmentMapper __facultyDepartmentMapper,
                              DeptMapDataMapper __deptMapDataMapper) {
 
         this.cacheService = __cacheService;
@@ -60,6 +64,7 @@ public class DepartmentService {
         this.deptCertRepository = __deptCertRepository;
         this.deptMapMapper = __deptMapMapper;
         this.deptListMapper = __deptListMapper;
+        this.facultyDepartmentMapper = __facultyDepartmentMapper;
         this.deptMapDataMapper = __deptMapDataMapper;
     }
 
@@ -145,6 +150,13 @@ public class DepartmentService {
 
         return deptMapDataDTO;
 
+    }
+
+    public List<Department> getDepartments() {return departmentRepository.findAll();}
+
+    public List<FacultyandDepartmentDTO> getFacultyDepartment() {
+        List<DeptMap> deptMaps = deptMapRepository.findAll(); // faculty, department fetch join 필요
+        return facultyDepartmentMapper.toHierarchy(deptMaps);
     }
 
 }

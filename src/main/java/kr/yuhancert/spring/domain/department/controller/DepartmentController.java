@@ -4,6 +4,8 @@ import ch.qos.logback.classic.Logger;
 import kr.yuhancert.spring.domain.department.dto.DeptListDTO;
 import kr.yuhancert.spring.domain.department.dto.DeptMapDTO;
 import kr.yuhancert.spring.domain.department.dto.DeptMapDataDTO;
+import kr.yuhancert.spring.domain.department.dto.FacultyandDepartmentDTO;
+import kr.yuhancert.spring.domain.department.entity.Department;
 import kr.yuhancert.spring.domain.department.service.DepartmentService;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -73,6 +75,42 @@ public class DepartmentController {
             return ResponseEntity.ok(deptMapDataDTO);
         } catch (Exception e) {
             logger.error("Error getting department data", e);
+            errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
+    @GetMapping("/department")
+    public ResponseEntity<?> getDepartmentData() {
+        try{
+            List<Department> departmentsDTO = departmentService.getDepartments();
+            return ResponseEntity.ok(departmentsDTO);
+        } catch (Exception e) {
+            logger.error("Error getting department data", e);
+            errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
+    @GetMapping("/list/edit")
+    public ResponseEntity<?> getDeptListEdit() {
+        try {
+            List<FacultyandDepartmentDTO> list = departmentService.getFacultyDepartment();
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            logger.error("Error getting department list", e);
             errorResponse = new HashMap<>();
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());
