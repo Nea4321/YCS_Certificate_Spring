@@ -106,7 +106,7 @@ public class UserService {
         }
 
         // 유저 정보를 DB에서 가져온 후 jwt토큰 으로 저장함.
-        Map<String, String> token = Jwt_Token_Create(user.getUserName(),user.getUserEmail(),user.getSocialType(),response);
+        Map<String, String> token = Jwt_Token_Create(user.getUserName(),user.getUserEmail(),user.getSocialType(),user.getUserRole(),response);
         return ResponseEntity.ok(token);
 
 
