@@ -90,7 +90,7 @@ public class JsonCertificateParser {
             entity.setId(certId); // 공유 PK 구조
             entity.setCertificate(em.getReference(Certificate.class, certId));
         }
-        entity.setInfogb("public_norm_v1");
+        entity.setInfogb("공공 자격증");
         entity.setContents(obj.toString());
 
         certDataRepository.save(entity);
