@@ -10,14 +10,12 @@ import kr.yuhancert.spring.domain.login.dto.*;
 import kr.yuhancert.spring.domain.login.entity.User;
 import kr.yuhancert.spring.domain.login.entity.SocialType;
 import kr.yuhancert.spring.domain.login.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
 
 import java.util.List;
 import java.util.Map;
@@ -48,15 +46,30 @@ public class UserService {
         SocialUserResponseDTO socialUserResponseDTO = loginService.getUserInfo(socialTokenDTO.getAccess_token());
         log.info("socialUserResponse {} ", socialUserResponseDTO.toString());
 
-        ///  유저 db에 유저 데이터 없으면 채워 넣음.
-        if (userRepository.findByUserEmail(socialUserResponseDTO.getEmail()).isEmpty()) {
-            User user = userRepository.save(
+        Optional<User> checkUser = userRepository.findByUserEmail(socialUserResponseDTO.getEmail());
+
+        if(checkUser.isPresent()) {
+            User checkType = checkUser.get();
+            if(!checkType.getSocialType().equals(socialUserResponseDTO.getSocialType())) {
+                userRepository.save(
+                        User.builder()
+                                .userEmail(socialUserResponseDTO.getEmail())
+                                .userName(socialUserResponseDTO.getName())
+                                .socialType(socialUserResponseDTO.getSocialType())
+                                .userRole("normal")
+                                .build()
+                );
+            }
+        }
+        else{
+            userRepository.save(
                     User.builder()
                             .userEmail(socialUserResponseDTO.getEmail())
                             .userName(socialUserResponseDTO.getName())
                             .socialType(socialUserResponseDTO.getSocialType())
+                            .userRole("normal")
                             .build()
-            );
+                );
         }
 
         return socialUserResponseDTO;
@@ -138,9 +151,9 @@ public class UserService {
 
 
     // jwt 토큰 생성 관련 로직 - 토큰을 생성하는 서비스 사용, 리프레시 토큰을 쿠키로 변환하는 곳.
-    public Map<String, String> Jwt_Token_Create(String name, String email, SocialType socialType, HttpServletResponse response) {
+    public Map<String, String> Jwt_Token_Create(String name, String email, SocialType socialType, String role,HttpServletResponse response) {
         // jwt 액세스,리프레시 토큰 생성
-        String accessToken = jwtService.createAccessToken(name, email, socialType);
+        String accessToken = jwtService.createAccessToken(name, email, socialType, role);
         String refreshToken = jwtService.createRefreshToken(email);
 
         // 리프레시 토큰 쿠키로 변환
@@ -183,7 +196,8 @@ public class UserService {
 
                         String name = user.getUserName();
                         SocialType socialType = user.getSocialType();
-                        String accessToken = jwtService.createAccessToken(name, email, socialType);
+                        String role = user.getUserRole();
+                        String accessToken = jwtService.createAccessToken(name, email, socialType, role);
 
                         return ResponseEntity.ok(Map.of("accessToken", accessToken));
                     }

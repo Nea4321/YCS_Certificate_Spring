@@ -13,4 +13,5 @@ public class SocialUserResponseDTO {
     private String email;
     private String name;
     private SocialType socialType;
+    private String role;
 }

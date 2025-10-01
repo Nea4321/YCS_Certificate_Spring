@@ -26,7 +26,7 @@ public class JwtService {
     public long get_refreshExp(){return refreshExpireTime;}
 
     // jwt 액세스 토큰 생성
-    public String createAccessToken(String userName, String email, SocialType socialType) {
+    public String createAccessToken(String userName, String email, SocialType socialType, String role) {
         try {
             Claims claims = Jwts.claims().build();
             long now = System.currentTimeMillis();
@@ -37,6 +37,7 @@ public class JwtService {
                     .claim("userName", userName)
                     .claim("email", email)
                     .claim("socialType", socialType)
+                    .claim("role", role)
                     .expiration(new Date(now + accessExpireTime))
                     .signWith(jwt_access_key)
                     .compact();

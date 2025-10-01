@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class NaverLoginResponseDTO {
+public class NaveResponseUserDTO {
 
     private String resultcode;
     private String message;

@@ -5,8 +5,8 @@ import com.google.gson.GsonBuilder;
 import kr.yuhancert.spring.domain.login.dto.*;
 import kr.yuhancert.spring.domain.login.entity.SocialType;
 import kr.yuhancert.spring.global.config.gson.GsonLocalDateTimeAdapter;
-import kr.yuhancert.spring.infra.login.api.naver.NaverGetToken;
-import kr.yuhancert.spring.infra.login.api.naver.NaverGetUser;
+import kr.yuhancert.spring.infra.login.api.kakao.KakaoGetToken;
+import kr.yuhancert.spring.infra.login.api.kakao.KakaoGetUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -16,40 +16,40 @@ import java.time.LocalDateTime;
 
 @Slf4j
 @Service
-public class NaverLoginService implements SocialLoginService{
-    private final NaverGetToken naverGetToken;
-    private final NaverGetUser naverGetUser;
+public class KakaoLoginService implements SocialLoginService{
+    private final KakaoGetToken kakaoGetToken;
+    private final KakaoGetUser kakaoGetUser;
 
-    public NaverLoginService (NaverGetToken naverGetToken, NaverGetUser naverGetUser) {
-        this.naverGetToken = naverGetToken;
-        this.naverGetUser = naverGetUser;
+    public KakaoLoginService (KakaoGetToken kakaoGetToken, KakaoGetUser kakaoGetUser) {
+        this.kakaoGetToken = kakaoGetToken;
+        this.kakaoGetUser = kakaoGetUser;
     }
 
-    @Value("${naver_client_id}")
-    private String naverAppKey;
-    @Value("${naver_client_password}")
-    private String naverAppSecret;
-    @Value("${naver_grant_type}")
-    private String naverGrantType;
+    @Value("${kakao_api_key}")
+    private String kakaoAppKey;
+    @Value("${kakao_client_password}")
+    private String kakaoAppSecret;
+    @Value("${kakao_redirect_url}")
+    private String kakakoRedirectUrl;
 
     @Override
     public SocialType getServiceName() {
-        return SocialType.NAVER;
+        return SocialType.KAKAO;
     }
 
     /// 구글 서버 에서 엑세스 토큰을 받아오는 메서드
     @Override
     public SocialTokenDTO getAccessToken(String authorizationCode) {
-        ResponseEntity<?> response = naverGetToken.getAccessToken(
-                NaverRequestAccessTokenDTO.builder()
+        ResponseEntity<?> response = kakaoGetToken.getAccessToken(
+                KakaoRequestAccessTokenDTO.builder()
+                        .grant_type("authorization_code")
                         .code(authorizationCode)
-                        .client_id(naverAppKey)
-                        .clientSecret(naverAppSecret)
-                        .grant_type(naverGrantType)
-                        .state("state")
+                        .client_id(kakaoAppKey)
+                        .clientSecret(kakaoAppSecret)
+                        .redirect_uri(kakakoRedirectUrl)
                         .build()
         );
-        log.info("naver access info");
+        log.info("kakao auth info");
         log.info(response.toString());
 
         return new Gson()
@@ -61,9 +61,9 @@ public class NaverLoginService implements SocialLoginService{
 
     @Override
     public SocialUserResponseDTO getUserInfo(String accessToken) {
-        ResponseEntity<?> response = naverGetUser.getUserInfo(accessToken);
+        ResponseEntity<?> response = kakaoGetUser.getUserInfo(accessToken);
 
-        log.info("naver user response");
+        log.info("kakao user response");
         log.info(response.toString());
 
 
@@ -74,14 +74,16 @@ public class NaverLoginService implements SocialLoginService{
                 .registerTypeAdapter(LocalDateTime.class, new GsonLocalDateTimeAdapter()) //LocalDateTime 가능하게
                 .create(); //gson 생성 -> 이 gson은 위 설정으로 재탄생함.
 
-        NaveResponseUserDTO naverLoginResponse = gson.fromJson(jsonString, NaveResponseUserDTO.class);
+        KakaoResponseUserDTO kakaoResponse = gson.fromJson(jsonString, KakaoResponseUserDTO.class);
 
-        NaveResponseUserDTO.NaverResponse res = naverLoginResponse.getResponse();
+        String nickname = kakaoResponse.getProperties().getNickname();
+        String email = kakaoResponse.getKakao_account().getEmail();
+
 
         return SocialUserResponseDTO.builder()
-                .name(res.getName())
-                .email(res.getEmail())
-                .socialType(SocialType.NAVER)
+                .name(nickname)
+                .email(email)
+                .socialType(SocialType.KAKAO)
                 .build();
     }
 
