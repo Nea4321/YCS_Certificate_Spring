@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -68,10 +69,10 @@ public class DepartmentController {
         }
     }
 
-    @GetMapping("/data")
-    public ResponseEntity<?> getDeptData() {
+    @GetMapping("/data/{id}")
+    public ResponseEntity<?> getDeptData(@PathVariable("id") Long id) {
         try{
-            List<DeptMapDataDTO> deptMapDataDTO = departmentService.getDeptMapData();
+            DeptMapDataDTO deptMapDataDTO = departmentService.getDeptMapData(id);
             return ResponseEntity.ok(deptMapDataDTO);
         } catch (Exception e) {
             logger.error("Error getting department data", e);

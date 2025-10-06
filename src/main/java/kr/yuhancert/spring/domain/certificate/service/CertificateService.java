@@ -114,6 +114,12 @@ public class CertificateService {
         return certDataDTO;
     }
 
+    public List<ScheduleDTO> getSchedule(List<Long> __ids) {
+        //캐시 넣으면 더 복잡해질거 같아서 그냥 넘기기
+        return certDataRepository.findSchedulesByIds(__ids);
+
+    }
+
     public void runFallback(String certName) throws Exception {
         executor.runAndSave(null, certName);
     }
@@ -124,7 +130,7 @@ public class CertificateService {
         Certificate cert = certificateRepository.findById(certId)
                 .orElseThrow(() -> new IllegalArgumentException("no certificate: " + certId));
 
-        String jmcd = cert.getJmcd().getJmcd();
+        String jmcd = cert.getJmcd();
         if (jmcd == null || jmcd.isBlank()) {
             throw new IllegalStateException("jmcd 가 비어있습니다. id=" + certId);
         }

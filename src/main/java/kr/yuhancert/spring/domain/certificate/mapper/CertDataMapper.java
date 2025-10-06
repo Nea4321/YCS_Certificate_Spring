@@ -10,6 +10,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 @Qualifier("certDataMapper")
 public interface CertDataMapper {
     @Mapping(source = "id", target = "certificate_id")
-    @Mapping(source = "certificate.certificateName", target = "certificate_name")
+    @Mapping(source = "certificateName", target = "certificate_name")
+    @Mapping(source = "basicInfo", target = "basic_info")
+    @Mapping(source = "schedule", target = "schedule")
+    @Mapping(source = "otherInfo", target = "other_info")
+    @Mapping(source = "organization.id", target = "organization_id")
     CertDataDTO toCertDataDTO(CertData __certData);
 }

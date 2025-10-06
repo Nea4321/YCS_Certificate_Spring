@@ -46,7 +46,4 @@ public class NationalCert {
     @Column(name = "seriesnm", length = Integer.MAX_VALUE)
     private String seriesnm;
 
-    @OneToMany(mappedBy = "jmcd")
-    private Set<Certificate> certificates = new LinkedHashSet<>();
-
 }

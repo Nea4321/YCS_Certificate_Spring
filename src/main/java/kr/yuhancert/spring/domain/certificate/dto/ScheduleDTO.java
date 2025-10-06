@@ -5,13 +5,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+import java.util.Map;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CertificateDTO {
-    private Long certificate_id;
-    private String certificate_name;
-    private String jmcd;
-    private Long organization_id;
+public class ScheduleDTO {
+    Long certificate_id;
+    String certificate_name;
+    List<Map<String, Object>> schedule;
 }

@@ -6,9 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DeptMapDataRepository extends JpaRepository<DeptMapData, Long> {
     @EntityGraph(attributePaths = {"deptMap", "deptMap.major", "deptMap.department", "deptMap.faculty"})
-    List<DeptMapData> findAll();
+    Optional<DeptMapData> findById(Long __id);
 }

@@ -29,10 +29,13 @@ public class Certificate {
     @Column(name = "certificate_name", nullable = false)
     private String certificateName;
 
+    @Column(name = "jmcd", length = Integer.MAX_VALUE)
+    private String jmcd;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "jmcd")
-    private NationalCert jmcd;
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
 
     @OneToOne(mappedBy = "certificate")
     private CertData certDatum;

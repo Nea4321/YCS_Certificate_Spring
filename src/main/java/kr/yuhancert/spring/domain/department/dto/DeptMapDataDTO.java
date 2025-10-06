@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -15,5 +16,5 @@ public class DeptMapDataDTO {
     private Long dept_map_id;
     private String dept_map_name;
     private List<DeptMapDataCertDTO> cert;
-    private String description;
+    private Map<String, Object> description;
 }

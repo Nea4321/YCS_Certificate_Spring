@@ -9,9 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CertificateDTO {
-    private Long certificate_id;
-    private String certificate_name;
-    private String jmcd;
+public class OrganizationDTO {
     private Long organization_id;
+    private String organization_name;
 }

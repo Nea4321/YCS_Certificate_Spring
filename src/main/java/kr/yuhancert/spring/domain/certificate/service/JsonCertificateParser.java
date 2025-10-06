@@ -74,8 +74,7 @@ public class JsonCertificateParser {
                 .orElseThrow(() -> new IllegalArgumentException("no certificate: " + certId));
 
         String certName = Optional.ofNullable(cert.getCertificateName()).orElse("");
-        NationalCert nc = cert.getJmcd();
-        String jmcd = (nc != null) ? Optional.ofNullable(nc.getJmcd()).orElse("") : "";
+        String jmcd = Optional.ofNullable(cert.getJmcd()).orElse("");
 
         // 3) _meta 보강/주입
         ObjectNode meta = obj.with("_meta");  // 없으면 생성
@@ -90,8 +89,8 @@ public class JsonCertificateParser {
             entity.setId(certId); // 공유 PK 구조
             entity.setCertificate(em.getReference(Certificate.class, certId));
         }
-        entity.setInfogb("공공 자격증");
-        entity.setContents(obj.toString());
+//        entity.setInfogb("공공 자격증");
+//        entity.setContents(obj.toString());
 
         certDataRepository.save(entity);
     }

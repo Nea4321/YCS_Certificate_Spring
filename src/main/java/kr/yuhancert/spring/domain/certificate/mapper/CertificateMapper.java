@@ -13,7 +13,8 @@ import java.util.List;
 public interface CertificateMapper {
     @Mapping(source = "id", target = "certificate_id")
     @Mapping(source = "certificateName", target = "certificate_name")
-    @Mapping(source = "jmcd.jmcd", target = "jmcd")
+    @Mapping(source = "jmcd", target = "jmcd")
+    @Mapping(source = "organization.id", target = "organization_id")
     CertificateDTO toCertificateDTO(Certificate certificate);
     List<CertificateDTO> toCertificateDTOList(List<Certificate> __certificateList);
 

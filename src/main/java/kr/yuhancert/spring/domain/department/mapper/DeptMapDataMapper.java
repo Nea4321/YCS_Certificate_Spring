@@ -8,42 +8,26 @@ import kr.yuhancert.spring.domain.department.entity.DeptMapData;
 import org.mapstruct.Mapper;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Mapper(componentModel = "spring")
 public interface DeptMapDataMapper {
-    default List<DeptMapDataDTO> toDeptMapDataDTOList(List<DeptMapData> __deptMapDataList, List<DeptCert> __deptCert) {
 
-        if (__deptMapDataList == null || __deptMapDataList.isEmpty()) {
-            return new ArrayList<>();
+    default DeptMapDataDTO toDeptMapDataDTO(DeptMapData __deptMapData, List<DeptCert> __deptCert) {
+
+        if (__deptMapData == null) {
+            return null;
         }
 
-        Map<Long, DeptMapDataDTO> dtoMap = new HashMap<>();
-
-        for (DeptMapData dm : __deptMapDataList) {
-
-            DeptMapDataDTO deptMapDataDTO = createDeptMapDataDTO(dm);
-
-            Long key = deptMapDataDTO.getDept_map_id();
-
-            dtoMap.put(key, deptMapDataDTO);
-
-        }
+        List<DeptMapDataCertDTO> deptMapDataCertDTOList = new ArrayList<>();
 
         for (DeptCert dc : __deptCert) {
 
             DeptMapDataCertDTO deptMapDataCertDTO = createDeptMapDataCertDTO(dc);
 
-            dtoMap.get(dc.getDeptMap().getId()).getCert().add(deptMapDataCertDTO);
+            deptMapDataCertDTOList.add(deptMapDataCertDTO);
 
         }
-
-        return new ArrayList<>(dtoMap.values());
-    }
-
-    private DeptMapDataDTO createDeptMapDataDTO(DeptMapData __deptMapData) {
 
         DeptMap dm = __deptMapData.getDeptMap();
 
@@ -51,21 +35,21 @@ public interface DeptMapDataMapper {
             return new DeptMapDataDTO(
                     __deptMapData.getId(),
                     dm.getMajor().getMajorName(),
-                    new ArrayList<>(),
+                    deptMapDataCertDTOList,
                     __deptMapData.getDescription()
             );
         }else if( dm != null && dm.getDepartment() != null) {
             return new DeptMapDataDTO(
                     __deptMapData.getId(),
                     dm.getDepartment().getDepartmentName(),
-                    new ArrayList<>(),
+                    deptMapDataCertDTOList,
                     __deptMapData.getDescription()
             );
         }else {
             return new DeptMapDataDTO(
                     __deptMapData.getId(),
                     dm.getFaculty().getFacultyName(),
-                    new ArrayList<>(),
+                    deptMapDataCertDTOList,
                     __deptMapData.getDescription()
             );
         }

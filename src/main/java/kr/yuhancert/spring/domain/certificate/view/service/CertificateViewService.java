@@ -29,7 +29,7 @@ public class CertificateViewService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "cert_data not found: certId=" + certId));
         try {
-            return objectMapper.readTree(cd.getContents());
+            return null;//objectMapper.readTree(cd.getBasicInfo());
         } catch (Exception e) {
             throw new IllegalStateException("Invalid JSON contents for certId=" + certId, e);
         }

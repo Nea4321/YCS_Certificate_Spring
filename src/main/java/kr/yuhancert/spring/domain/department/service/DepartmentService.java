@@ -34,7 +34,7 @@ public class DepartmentService {
     private List<Faculty> facultyEntities;
     private List<Major> majorEntities;
     private List<DeptMap> deptMapEntities;
-    private List<DeptMapData> deptMapDataEntities;
+    private DeptMapData deptMapDataEntities;
     private List<DeptCert> deptCertEntities;
     private final DeptMapMapper deptMapMapper;
     private final DeptListMapper deptListMapper;
@@ -87,10 +87,6 @@ public class DepartmentService {
             deptMapEntities = deptMapRepository.findAll();
         }
 
-        if (deptMapDataEntities == null || deptMapDataEntities.isEmpty()) {
-            deptMapDataEntities = deptMapDataRepository.findAll();
-        }
-
         if (deptCertEntities == null || deptCertEntities.isEmpty()) {
             deptCertEntities = deptCertRepository.findAll();
         }
@@ -134,17 +130,19 @@ public class DepartmentService {
 
     }
 
-    public List<DeptMapDataDTO> getDeptMapData() {
+    public DeptMapDataDTO getDeptMapData(Long __id) {
 
         String CACHE_KEY_DMD = "data";
-        List<DeptMapDataDTO> cacheDeptMapDataDTO = cacheService.getList(CacheList.DEPT_DATA_CACHE.getName(), CACHE_KEY_DMD, DeptMapDataDTO.class);
+        DeptMapDataDTO cacheDeptMapDataDTO = cacheService.get(CacheList.DEPT_DATA_CACHE.getName(), CACHE_KEY_DMD, DeptMapDataDTO.class);
         if (cacheDeptMapDataDTO != null) {
             return cacheDeptMapDataDTO;
         }
 
         checkDeptEntities();
 
-        List<DeptMapDataDTO> deptMapDataDTO = deptMapDataMapper.toDeptMapDataDTOList(deptMapDataEntities, deptCertEntities);
+        deptMapDataEntities = deptMapDataRepository.findById(__id).orElse(null);
+
+        DeptMapDataDTO deptMapDataDTO = deptMapDataMapper.toDeptMapDataDTO(deptMapDataEntities, deptCertEntities);
 
         cacheService.put(CacheList.DEPT_DATA_CACHE.getName(), CACHE_KEY_DMD, deptMapDataDTO);
 

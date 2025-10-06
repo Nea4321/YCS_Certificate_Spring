@@ -63,6 +63,24 @@ public class CertificateController {
         }
     }
 
+    @GetMapping("/schedule")
+    public ResponseEntity<?> getSchedule(@RequestParam("id") List<Long> ids) {
+        try {
+            List<ScheduleDTO> schedule = certificateService.getSchedule(ids);
+            return ResponseEntity.ok(schedule);
+        } catch (Exception e) {
+            logger.error("Error getting schedule data", e);
+            errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
     @PostMapping("/run-fallback")
     public ResponseEntity<String> runByFallback(@RequestParam String certName) throws Exception {
         certificateService.runFallback(certName);
