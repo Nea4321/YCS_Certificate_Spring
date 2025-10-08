@@ -45,6 +45,24 @@ public class CertificateController {
         }
     }
 
+    @GetMapping("/tag")
+    public ResponseEntity<?> getTag() {
+        try {
+            List<TagDTO> tagDTO = certificateService.getTagList();
+            return ResponseEntity.ok(tagDTO);
+        }catch (Exception e) {
+            logger.error("Error getting tag list", e);
+            errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
     @GetMapping("/data/{id}")
     public ResponseEntity<?> getCertData(@PathVariable("id") Long id) {
         try {
