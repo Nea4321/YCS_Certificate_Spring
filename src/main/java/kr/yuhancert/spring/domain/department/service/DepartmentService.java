@@ -96,8 +96,9 @@ public class DepartmentService {
 
     @Transactional(readOnly = true)
     public List<DeptListDTO> getDeptList() {
-
         String CACHE_KEY_DL = "list";
+        cacheService.evict(CacheList.DEPT_LIST_CACHE.getName(), CACHE_KEY_DL);
+
         List<DeptListDTO> cacheDeptList =cacheService.getList(CacheList.DEPT_LIST_CACHE.getName(), CACHE_KEY_DL, DeptListDTO.class);
         if (cacheDeptList != null) {
            return cacheDeptList;
@@ -193,8 +194,6 @@ public class DepartmentService {
     @Transactional
     public void setDeptDate(FacultyCreateRequestDTO dto) {
 
-        String CACHE_KEY_DL = "list";
-        cacheService.evict(CacheList.DEPT_LIST_CACHE.getName(), CACHE_KEY_DL);
         // 학부 조회
         Faculty facultyEntity = null;
         if (dto.getFacultyName() != null && !dto.getFacultyName().isBlank()) {
@@ -269,6 +268,9 @@ public class DepartmentService {
     public ResponseEntity<?> setFacultyDepartmentMajor(FacultyCreateRequestDTO facultyCreateRequestDTO) {
         logger.info("facultyCreateRequestDTO: " + facultyCreateRequestDTO);
         String facultyName_create = facultyCreateRequestDTO.getFacultyName();
+
+        String CACHE_KEY_DL = "list";
+        cacheService.evict(CacheList.DEPT_LIST_CACHE.getName(), CACHE_KEY_DL);
 
         // 학부 저장
         if (facultyName_create != null && !facultyName_create.isBlank()) {
