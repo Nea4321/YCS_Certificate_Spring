@@ -164,6 +164,9 @@ public class DepartmentService {
         Long id = deptEditRequestDTO.getId();
         String newName = deptEditRequestDTO.getValue();
 
+        String CACHE_KEY_DL = "list";
+        cacheService.evict(CacheList.DEPT_LIST_CACHE.getName(), CACHE_KEY_DL);
+
         if(type.equals("faculty")){
             facultyRepository.findById(id).ifPresent(faculty -> {
                 faculty.setFacultyName(newName);
@@ -191,6 +194,8 @@ public class DepartmentService {
     @Transactional
     public void setDeptDate(FacultyCreateRequestDTO dto) {
 
+        String CACHE_KEY_DL = "list";
+        cacheService.evict(CacheList.DEPT_LIST_CACHE.getName(), CACHE_KEY_DL);
         // 학부 조회
         Faculty facultyEntity = null;
         if (dto.getFacultyName() != null && !dto.getFacultyName().isBlank()) {
@@ -265,6 +270,7 @@ public class DepartmentService {
     public ResponseEntity<?> setFacultyDepartmentMajor(FacultyCreateRequestDTO facultyCreateRequestDTO) {
         logger.info("facultyCreateRequestDTO: " + facultyCreateRequestDTO);
         String facultyName_create = facultyCreateRequestDTO.getFacultyName();
+
         // 학부 저장
         if (facultyName_create != null && !facultyName_create.isBlank()) {
             if (!facultyRepository.existsByFacultyName(facultyName_create)) {

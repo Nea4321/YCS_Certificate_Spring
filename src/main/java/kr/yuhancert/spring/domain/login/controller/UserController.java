@@ -30,11 +30,16 @@ public class UserController {
      * */
     @PostMapping("/social_login")
     public ResponseEntity<?> doSocialLogin(@RequestBody @Valid SocialLoginRequestDTO request, HttpServletResponse response) {
-        SocialUserResponseDTO user = userService.doSocialLogin(request);
+        try {
+            SocialUserResponseDTO user = userService.doSocialLogin(request);
 
-        return ResponseEntity.ok(
-                userService.Jwt_Token_Create( user.getName(), user.getEmail(), user.getSocialType(), user.getRole(), response)
-        );
+            return ResponseEntity.ok(
+                    userService.Jwt_Token_Create(user.getName(), user.getEmail(), user.getSocialType(), user.getRole(), response)
+            );
+        }
+        catch (Exception e) {
+
+        }
     }
 
     /** 기본 로그인 처리 */
