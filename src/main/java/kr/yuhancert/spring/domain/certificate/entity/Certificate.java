@@ -32,15 +32,9 @@ public class Certificate {
     @Column(name = "jmcd", length = Integer.MAX_VALUE)
     private String jmcd;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "organization_id")
     private Organization organization;
-
-    @OneToOne(mappedBy = "certificate")
-    private CertData certDatum;
-
-    @OneToMany(mappedBy = "certificate")
-    private Set<DeptCert> deptCerts = new LinkedHashSet<>();
 
 }

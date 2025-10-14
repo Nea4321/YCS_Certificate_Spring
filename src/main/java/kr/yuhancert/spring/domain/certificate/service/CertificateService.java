@@ -4,6 +4,8 @@ import kr.yuhancert.spring.domain.certificate.dto.*;
 import kr.yuhancert.spring.domain.certificate.entity.*;
 import kr.yuhancert.spring.domain.certificate.mapper.CertDataMapper;
 import kr.yuhancert.spring.domain.certificate.mapper.CertificateMapper;
+import kr.yuhancert.spring.domain.certificate.mapper.OrganizationMapper;
+import kr.yuhancert.spring.domain.certificate.mapper.TagMapper;
 import kr.yuhancert.spring.domain.certificate.repository.*;
 import kr.yuhancert.spring.global.cache.service.CacheService;
 import kr.yuhancert.spring.global.cache.util.CacheList;
@@ -20,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CertificateService {
@@ -28,9 +31,17 @@ public class CertificateService {
     Logger logger = LoggerFactory.getLogger(CertificateService.class);
     private final CertificateRepository certificateRepository;
     private final CertDataRepository certDataRepository;
+    private final TagRepository tagRepository;
+    private final TagMapRepository tagMapRepository;
+    private final OrganizationRepository organizationRepository;
     private final CertificateMapper certificateMapper;
     private final CertDataMapper certDataMapper;
+    private final TagMapper tagMapper;
+    private final OrganizationMapper organizationMapper;
     private List<Certificate> certificateEntities;
+    private List<Tag>  tagEntities;
+    private List<TagMap> tagMapEntities;
+    private List<Organization> organizationEntities;
     private CertData certDataEntities;
     private final CertConfigRegistry configRegistry;
     private final EngineRunner engineRunner;
@@ -48,40 +59,58 @@ public class CertificateService {
 
 
     public CertificateService(
-            CacheService cacheService,
-            CertificateRepository certificateRepository,
-            CertDataRepository certDataRepository,
+            CacheService __cacheService,
+            CertificateRepository __certificateRepository,
+            CertDataRepository __certDataRepository,
+            TagRepository __tagRepository,
+            TagMapRepository __tagMapRepository,
+            OrganizationRepository organizationRepository,
 
-            CertificateMapper certificateMapper,
-            CertDataMapper certDataMapper,
+            OrganizationMapper organizationMapper,
+            CertificateMapper __certificateMapper,
+            CertDataMapper __certDataMapper,
+            TagMapper __tagMapper,
             CertConfigRegistry certConfigRegistry,
             EngineRunner engineRunner,
             JsonCertificateParser parser,
             CertificateExecutor executor
     ) {
-        this.cacheService = cacheService;
-        this.certificateRepository = certificateRepository;
-        this.certDataRepository = certDataRepository;
-        this.certificateMapper = certificateMapper;
-        this.certDataMapper = certDataMapper;
+        this.cacheService = __cacheService;
+        this.certificateRepository = __certificateRepository;
+        this.certDataRepository = __certDataRepository;
+        this.tagRepository = __tagRepository;
+        this.tagMapRepository = __tagMapRepository;
+        this.organizationRepository = organizationRepository;
+        this.certificateMapper = __certificateMapper;
+        this.certDataMapper = __certDataMapper;
+        this.tagMapper = __tagMapper;
+        this.organizationMapper = organizationMapper;
         this.configRegistry = certConfigRegistry;
         this.engineRunner = engineRunner;
         this.parser = parser;
         this.executor = executor;
     }
 
-    private void checkCertEntities() {
-
-        if(certificateEntities == null || certificateEntities.isEmpty()) {
-            certificateEntities = certificateRepository.findAll();
-        }
-
-//        if (certDataEntities == null || certDataEntities.isEmpty()) {
-//            certDataEntities = certDataRepository.findAll().stream()
-//                    .collect(Collectors.toMap(CertData::getId, Function.identity()));
+//    private void checkCertEntities() {
+//
+//        if(certificateEntities == null || certificateEntities.isEmpty()) {
+//            certificateEntities = certificateRepository.findAll();
 //        }
-
-    }
+//
+//        if(tagEntities == null || tagEntities.isEmpty()) {
+//            tagEntities = tagRepository.findAll();
+//        }
+//
+//        if(tagMapEntities == null || tagMapEntities.isEmpty()) {
+//            tagMapEntities = tagMapRepository.findAll();
+//        }
+//
+////        if (certDataEntities == null || certDataEntities.isEmpty()) {
+////            certDataEntities = certDataRepository.findAll().stream()
+////                    .collect(Collectors.toMap(CertData::getId, Function.identity()));
+////        }
+//
+//    }
 
     public List<CertificateDTO> getCertificate() {
         String CACHE_KEY_CERT = "cert";
@@ -90,9 +119,21 @@ public class CertificateService {
             return cacheCertificate;
         }
 
-        checkCertEntities();
+        if(certificateEntities == null || certificateEntities.isEmpty()) {
+            certificateEntities = certificateRepository.findAll();
+        }
 
-        List<CertificateDTO> certificateDTO = certificateMapper.toCertificateDTOList(certificateEntities);
+        if(tagMapEntities == null || tagMapEntities.isEmpty()) {
+            tagMapEntities = tagMapRepository.findAll();
+        }
+
+        Map<Long, List<Long>> tagMapMap = tagMapEntities.stream()
+                .collect(Collectors.groupingBy(
+                tm -> tm.getCertificate().getId(),
+                Collectors.mapping(tm -> tm.getTag().getId(), Collectors.toList())
+        ));
+
+        List<CertificateDTO> certificateDTO = certificateMapper.toCertificateDTOList(certificateEntities,  tagMapMap);
 
         cacheService.put(CacheList.CERT_CACHE.getName(), CACHE_KEY_CERT, certificateDTO);
 
@@ -112,6 +153,40 @@ public class CertificateService {
         cacheService.put(CacheList.CERT_DATA_CACHE.getName(), __id, certDataDTO);
 
         return certDataDTO;
+    }
+
+    public List<TagDTO> getTagList() {
+        List<TagDTO> cacheTagList = cacheService.getList(CacheList.TAG_CACHE.getName(), CacheList.TAG_CACHE, TagDTO.class);
+        if (cacheTagList != null) {
+            return cacheTagList;
+        }
+
+        if(tagEntities == null || tagEntities.isEmpty()) {
+            tagEntities = tagRepository.findAll();
+        }
+
+        List<TagDTO> tagDTOList = tagMapper.toTagListDTO(tagEntities);
+
+        cacheService.put(CacheList.TAG_CACHE.getName(), CacheList.TAG_CACHE, tagDTOList);
+
+        return tagDTOList;
+    }
+
+    public List<OrganizationDTO> getOrganizationList() {
+        List<OrganizationDTO> cacheOrganization = cacheService.getList(CacheList.ORG_CACHE.getName(), CacheList.ORG_CACHE, OrganizationDTO.class);
+        if (cacheOrganization != null) {
+            return cacheOrganization;
+        }
+
+        if(organizationEntities == null || organizationEntities.isEmpty()) {
+            organizationEntities = organizationRepository.findAll();
+        }
+
+        List<OrganizationDTO> orgDTOList = organizationMapper.toOrganizationDTOList(organizationEntities);
+
+        cacheService.put(CacheList.ORG_CACHE.getName(), CacheList.ORG_CACHE, orgDTOList);
+
+        return orgDTOList;
     }
 
     public List<ScheduleDTO> getSchedule(List<Long> __ids) {

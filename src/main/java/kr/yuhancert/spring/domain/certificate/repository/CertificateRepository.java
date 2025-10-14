@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface CertificateRepository extends JpaRepository<Certificate, Long> {
-    @EntityGraph(attributePaths = {"organization", "certDataTest"})
+    @EntityGraph(attributePaths = {"organization"})
     List<Certificate> findAll();
 }

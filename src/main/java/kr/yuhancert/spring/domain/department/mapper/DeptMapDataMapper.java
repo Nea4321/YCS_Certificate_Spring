@@ -9,6 +9,7 @@ import org.mapstruct.Mapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Mapper(componentModel = "spring")
 public interface DeptMapDataMapper {
@@ -23,9 +24,12 @@ public interface DeptMapDataMapper {
 
         for (DeptCert dc : __deptCert) {
 
-            DeptMapDataCertDTO deptMapDataCertDTO = createDeptMapDataCertDTO(dc);
+            if (Objects.equals(dc.getDeptMap().getId(), __deptMapData.getId())) {
 
-            deptMapDataCertDTOList.add(deptMapDataCertDTO);
+                DeptMapDataCertDTO deptMapDataCertDTO = createDeptMapDataCertDTO(dc);
+
+                deptMapDataCertDTOList.add(deptMapDataCertDTO);
+            }
 
         }
 

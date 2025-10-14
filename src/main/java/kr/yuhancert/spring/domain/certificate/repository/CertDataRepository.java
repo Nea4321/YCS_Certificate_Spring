@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @Repository
 public interface CertDataRepository extends JpaRepository<CertData, Long> {
-    @EntityGraph(attributePaths = {"certificate"})
+    @EntityGraph(attributePaths = {"certificate", "organization"})
     Optional<CertData> findById(Long id);
 
     @Query("SELECT new kr.yuhancert.spring.domain.certificate.dto.ScheduleDTO(c.id, c.certificateName, c.schedule) " +

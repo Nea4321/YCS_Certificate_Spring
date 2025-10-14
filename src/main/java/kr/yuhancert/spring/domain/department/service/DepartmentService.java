@@ -132,8 +132,7 @@ public class DepartmentService {
 
     public DeptMapDataDTO getDeptMapData(Long __id) {
 
-        String CACHE_KEY_DMD = "data";
-        DeptMapDataDTO cacheDeptMapDataDTO = cacheService.get(CacheList.DEPT_DATA_CACHE.getName(), CACHE_KEY_DMD, DeptMapDataDTO.class);
+        DeptMapDataDTO cacheDeptMapDataDTO = cacheService.get(CacheList.DEPT_DATA_CACHE.getName(), __id, DeptMapDataDTO.class);
         if (cacheDeptMapDataDTO != null) {
             return cacheDeptMapDataDTO;
         }
@@ -144,7 +143,7 @@ public class DepartmentService {
 
         DeptMapDataDTO deptMapDataDTO = deptMapDataMapper.toDeptMapDataDTO(deptMapDataEntities, deptCertEntities);
 
-        cacheService.put(CacheList.DEPT_DATA_CACHE.getName(), CACHE_KEY_DMD, deptMapDataDTO);
+        cacheService.put(CacheList.DEPT_DATA_CACHE.getName(), __id, deptMapDataDTO);
 
         return deptMapDataDTO;
 
