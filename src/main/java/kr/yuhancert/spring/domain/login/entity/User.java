@@ -5,7 +5,6 @@ import lombok.*;
 
 @Entity
 @Table(name = "\"user\"") // PostgreSQL에서 user는 예약어라서 쌍따옴표 필요
-@IdClass(UserId.class)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,10 +13,13 @@ import lombok.*;
 public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="user_id", nullable=false)
+    private long userId;
+
     @Column(name = "user_email", nullable = false)
     private String userEmail;
 
-    @Id
     @Enumerated(EnumType.STRING)
     @Column(name = "social_type", nullable = false)
     private SocialType socialType;

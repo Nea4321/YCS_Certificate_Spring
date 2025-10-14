@@ -1,19 +1,16 @@
 package kr.yuhancert.spring.domain.department.controller;
 
 import ch.qos.logback.classic.Logger;
-import kr.yuhancert.spring.domain.department.dto.DeptListDTO;
-import kr.yuhancert.spring.domain.department.dto.DeptMapDTO;
-import kr.yuhancert.spring.domain.department.dto.DeptMapDataDTO;
-import kr.yuhancert.spring.domain.department.dto.FacultyandDepartmentDTO;
+import jakarta.validation.Valid;
+import kr.yuhancert.spring.domain.department.dto.*;
 import kr.yuhancert.spring.domain.department.entity.Department;
+import kr.yuhancert.spring.domain.department.mapper.DeptMapMapper;
+import kr.yuhancert.spring.domain.department.repository.DeptMapRepository;
 import kr.yuhancert.spring.domain.department.service.DepartmentService;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -26,12 +23,17 @@ public class DepartmentController {
 
     private final DepartmentService departmentService;
     private final Logger logger = (Logger) LoggerFactory.getLogger(this.getClass());
+    private final DeptMapRepository deptMapRepository;
+    private final DeptMapMapper deptMapMapper;
 
     private Map<String, String> errorResponse = new HashMap<>();
 
-    public DepartmentController(DepartmentService __departmentService) {
+    public DepartmentController(DepartmentService __departmentService, DeptMapRepository deptMapRepository, DeptMapMapper deptMapMapper) {
         this.departmentService = __departmentService;
+        this.deptMapRepository = deptMapRepository;
+        this.deptMapMapper = deptMapMapper;
     }
+
 
     @GetMapping("/list")
     public ResponseEntity<?> getDeptList() {
@@ -121,6 +123,37 @@ public class DepartmentController {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorResponse);
         }
+    }
+
+    @PostMapping("/edit")
+    public ResponseEntity<?> changeFacultyDepartMajor(@RequestBody DeptEditRequestDTO request) {
+        try {return departmentService.updateFacultyDepartmentMajor(request);}
+        catch (Exception e) { return ResponseEntity.badRequest().body("수정 실패: " + e.getMessage());}
+    }
+
+
+
+    @GetMapping("/delete")
+    public ResponseEntity<?> deleteDate() {
+        try {
+            List<FacultyandDepartmentDTO> list = departmentService.getFacultyDepartment();
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            logger.error("Error getting department list", e);
+            errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<?> setFacultyDepartMajor(@RequestBody @Valid FacultyCreateRequestDTO request) {
+        return departmentService.setFacultyDepartmentMajor(request);
     }
 
 }

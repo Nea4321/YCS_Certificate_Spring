@@ -49,17 +49,7 @@ public class UserService {
         Optional<User> checkUser = userRepository.findByUserEmail(socialUserResponseDTO.getEmail());
 
         if(checkUser.isPresent()) {
-            User checkType = checkUser.get();
-            if(!checkType.getSocialType().equals(socialUserResponseDTO.getSocialType())) {
-                userRepository.save(
-                        User.builder()
-                                .userEmail(socialUserResponseDTO.getEmail())
-                                .userName(socialUserResponseDTO.getName())
-                                .socialType(socialUserResponseDTO.getSocialType())
-                                .userRole("normal")
-                                .build()
-                );
-            }
+            throw new IllegalStateException("이미 가입된  소셜 사용자입니다.");
         }
         else{
             userRepository.save(
@@ -126,6 +116,7 @@ public class UserService {
                             .userName(userResponseDTO.getUserName())
                             .userPassword(userResponseDTO.getUserPassword())
                             .socialType(userResponseDTO.getSocialType())
+                            .userRole("normal")
                             .build()
             );
             return ResponseEntity.status(HttpStatus.OK).body("회원 등록 되었습니다.");
