@@ -4,6 +4,7 @@ import kr.yuhancert.spring.domain.certificate.dto.*;
 import kr.yuhancert.spring.domain.certificate.entity.*;
 import kr.yuhancert.spring.domain.certificate.mapper.CertDataMapper;
 import kr.yuhancert.spring.domain.certificate.mapper.CertificateMapper;
+import kr.yuhancert.spring.domain.certificate.mapper.OrganizationMapper;
 import kr.yuhancert.spring.domain.certificate.mapper.TagMapper;
 import kr.yuhancert.spring.domain.certificate.repository.*;
 import kr.yuhancert.spring.global.cache.service.CacheService;
@@ -32,12 +33,15 @@ public class CertificateService {
     private final CertDataRepository certDataRepository;
     private final TagRepository tagRepository;
     private final TagMapRepository tagMapRepository;
+    private final OrganizationRepository organizationRepository;
     private final CertificateMapper certificateMapper;
     private final CertDataMapper certDataMapper;
     private final TagMapper tagMapper;
+    private final OrganizationMapper organizationMapper;
     private List<Certificate> certificateEntities;
     private List<Tag>  tagEntities;
     private List<TagMap> tagMapEntities;
+    private List<Organization> organizationEntities;
     private CertData certDataEntities;
     private final CertConfigRegistry configRegistry;
     private final EngineRunner engineRunner;
@@ -60,7 +64,9 @@ public class CertificateService {
             CertDataRepository __certDataRepository,
             TagRepository __tagRepository,
             TagMapRepository __tagMapRepository,
+            OrganizationRepository organizationRepository,
 
+            OrganizationMapper organizationMapper,
             CertificateMapper __certificateMapper,
             CertDataMapper __certDataMapper,
             TagMapper __tagMapper,
@@ -74,9 +80,11 @@ public class CertificateService {
         this.certDataRepository = __certDataRepository;
         this.tagRepository = __tagRepository;
         this.tagMapRepository = __tagMapRepository;
+        this.organizationRepository = organizationRepository;
         this.certificateMapper = __certificateMapper;
         this.certDataMapper = __certDataMapper;
         this.tagMapper = __tagMapper;
+        this.organizationMapper = organizationMapper;
         this.configRegistry = certConfigRegistry;
         this.engineRunner = engineRunner;
         this.parser = parser;
@@ -162,6 +170,23 @@ public class CertificateService {
         cacheService.put(CacheList.TAG_CACHE.getName(), CacheList.TAG_CACHE, tagDTOList);
 
         return tagDTOList;
+    }
+
+    public List<OrganizationDTO> getOrganizationList() {
+        List<OrganizationDTO> cacheOrganization = cacheService.getList(CacheList.ORG_CACHE.getName(), CacheList.ORG_CACHE, OrganizationDTO.class);
+        if (cacheOrganization != null) {
+            return cacheOrganization;
+        }
+
+        if(organizationEntities == null || organizationEntities.isEmpty()) {
+            organizationEntities = organizationRepository.findAll();
+        }
+
+        List<OrganizationDTO> orgDTOList = organizationMapper.toOrganizationDTOList(organizationEntities);
+
+        cacheService.put(CacheList.ORG_CACHE.getName(), CacheList.ORG_CACHE, orgDTOList);
+
+        return orgDTOList;
     }
 
     public List<ScheduleDTO> getSchedule(List<Long> __ids) {
