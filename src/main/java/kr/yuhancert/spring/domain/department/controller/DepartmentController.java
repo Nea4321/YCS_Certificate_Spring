@@ -133,22 +133,9 @@ public class DepartmentController {
 
 
 
-    @GetMapping("/delete")
-    public ResponseEntity<?> deleteDate() {
-        try {
-            List<FacultyandDepartmentDTO> list = departmentService.getFacultyDepartment();
-            return ResponseEntity.ok(list);
-        } catch (Exception e) {
-            logger.error("Error getting department list", e);
-            errorResponse = new HashMap<>();
-            errorResponse.put("error", "Internal Server Error");
-            errorResponse.put("message", e.getMessage());
-            errorResponse.put("timestamp", new Date().toString());
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorResponse);
-        }
+    @PostMapping("/delete")
+    public ResponseEntity<?> deleteFaDeMa(@RequestBody @Valid DeptEditRequestDTO request) {
+        return departmentService.deleteFacultyDepartmentMajor(request);
     }
 
     @PostMapping("/create")
