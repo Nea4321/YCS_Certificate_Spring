@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class UserResponseDTO {
+    private Long userId;
     @NotNull
     private String userName;
     @NotNull

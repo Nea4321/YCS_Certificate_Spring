@@ -10,6 +10,7 @@ import lombok.*;
 @Getter
 @ToString
 public class SocialUserResponseDTO {
+    private Long id;
     private String email;
     private String name;
     private SocialType socialType;

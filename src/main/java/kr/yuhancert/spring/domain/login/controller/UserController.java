@@ -1,62 +1,69 @@
 package kr.yuhancert.spring.domain.login.controller;
 
+import ch.qos.logback.classic.Logger;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
-import kr.yuhancert.spring.domain.login.dto.LoginResponseDTO;
-import kr.yuhancert.spring.domain.login.dto.SocialLoginRequestDTO;
-import kr.yuhancert.spring.domain.login.dto.SocialUserResponseDTO;
-import kr.yuhancert.spring.domain.login.dto.UserResponseDTO;
+import kr.yuhancert.spring.domain.certificate.dto.ScheduleDTO;
+import kr.yuhancert.spring.domain.login.dto.UserDataDTO;
 import kr.yuhancert.spring.domain.login.service.UserService;
-import lombok.RequiredArgsConstructor;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/user")
 public class UserController {
+
     private final UserService userService;
+    private Map<String, String> errorResponse = new HashMap<>();
+    private final Logger logger = (Logger) LoggerFactory.getLogger(this.getClass());
 
-    public UserController(UserService userService) {this.userService = userService;}
-
-    /**
-     * 소셜 로그인 처리해서 jwt 토큰 넘겨줌
-     *
-     * doSocialLogin() - 소셜 유저 정보 얻어옴.
-     * 얻은 정보로 jwt 토큰 생성
-     * 액세스토큰, 리프레시 토큰 전달
-     * 리프레시 토큰은 httponly cookie로 전달
-     * */
-    @PostMapping("/social_login")
-    public ResponseEntity<?> doSocialLogin(@RequestBody @Valid SocialLoginRequestDTO request, HttpServletResponse response) {
-        SocialUserResponseDTO user = userService.doSocialLogin(request);
-
-        return ResponseEntity.ok(
-                userService.Jwt_Token_Create( user.getName(), user.getEmail(), user.getSocialType(), user.getRole(), response)
-        );
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    /** 기본 로그인 처리 */
-    @PostMapping("/login")
-    public ResponseEntity<?> doLogin(@RequestBody @Valid LoginResponseDTO request, HttpServletResponse response) {
-        return userService.doLogin(request,response);
+    @GetMapping("/data")
+    public ResponseEntity<?> getUserData(HttpServletRequest request) {
+        try {
+            UserDataDTO userDataDTO = userService.getUserData(request);
+            return ResponseEntity.ok(userDataDTO);
+        } catch (Exception e) {
+            logger.error("Error getting department list", e);
+            errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
     }
 
-    /** 회원가입 */
-    @PostMapping("/singup")
-    public ResponseEntity<?> doSingup(@RequestBody @Valid UserResponseDTO request) {
-        return userService.doSingUp(request);
-    }
+    @GetMapping("/schedule")
+    public ResponseEntity<?> getUserSchedule(HttpServletRequest request) {
+        try {
+            List<ScheduleDTO> scheduleDTOS = userService.getUserSchedule(request);
+            return ResponseEntity.ok(scheduleDTOS);
+        } catch (Exception e) {
+            logger.error("Error getting department list", e);
+            errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new Date().toString());
 
-    @PostMapping("/refresh")
-    public ResponseEntity<?> checkRefreshToken(HttpServletRequest request) {
-        return userService.checkRefreshToken(request);
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> RefreshTokenDelete(HttpServletResponse request) {
-        return userService.logout(request);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
     }
 
 }
