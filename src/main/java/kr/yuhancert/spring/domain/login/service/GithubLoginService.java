@@ -101,6 +101,7 @@ public class GithubLoginService implements SocialLoginService {
                 .name(githubLoginResponse.getLogin())
                 .email(email)
                 .socialType(SocialType.GITHUB)
+                .role("normal")
                 .build();
     }
 

@@ -96,6 +96,7 @@ public class GoogleLoginService implements SocialLoginService {
                 .name(googleLoginResponse.getName())
                 .email(googleLoginResponse.getEmail())
                 .socialType(SocialType.GOOGLE)
+                .role("normal")
                 .build();
     }
 

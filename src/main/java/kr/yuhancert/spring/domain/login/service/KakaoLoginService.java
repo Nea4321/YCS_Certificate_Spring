@@ -84,6 +84,7 @@ public class KakaoLoginService implements SocialLoginService{
                 .name(nickname)
                 .email(email)
                 .socialType(SocialType.KAKAO)
+                .role("normal")
                 .build();
     }
 

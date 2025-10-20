@@ -82,6 +82,7 @@ public class NaverLoginService implements SocialLoginService{
                 .name(res.getName())
                 .email(res.getEmail())
                 .socialType(SocialType.NAVER)
+                .role("normal")
                 .build();
     }
 
