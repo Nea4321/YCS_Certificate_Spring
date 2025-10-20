@@ -41,6 +41,13 @@ public class UserFavoriteService {
         return userFavoriteMapper.toUserFavoriteDTOList(userFavoriteEntities);
     }
 
+    public Boolean isFavorite(HttpServletRequest request, String __type, Long __typeId) {
+
+        Claims claims = jwtService.parseClaims(request);
+
+        return userFavoriteRepository.findByUserIdAndTypeAndTypeId(claims.get("id", Long.class), __type, __typeId).isPresent();
+    }
+
     public void addUserFavorite(HttpServletRequest request, String __type, Long __typeId) {
 
         Claims claims = jwtService.parseClaims(request);

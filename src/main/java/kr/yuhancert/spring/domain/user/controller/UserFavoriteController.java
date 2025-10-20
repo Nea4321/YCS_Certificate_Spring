@@ -42,6 +42,23 @@ public class UserFavoriteController {
         }
     }
 
+    @GetMapping("/{type}/{id}")
+    public ResponseEntity<?> getUserFavoriteById(HttpServletRequest request, @PathVariable("type") String type, @PathVariable("id") Long id){
+        try {
+            Boolean isFavorite = userFavoriteService.isFavorite(request, type, id);
+            return ResponseEntity.ok(isFavorite);
+        } catch (Exception e) {
+            logger.error("Error getting user favorite by id", e);
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new java.util.Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
     @PutMapping("/{type}/{id}")
     public ResponseEntity<?> addUserFavorite(HttpServletRequest request, @PathVariable("type") String type, @PathVariable("id") Long id){
         try {
