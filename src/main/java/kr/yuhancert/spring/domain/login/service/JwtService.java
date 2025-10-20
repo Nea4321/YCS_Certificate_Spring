@@ -2,7 +2,9 @@ package kr.yuhancert.spring.domain.login.service;
 
 
 import io.jsonwebtoken.*;
+import jakarta.servlet.http.HttpServletRequest;
 import kr.yuhancert.spring.domain.login.entity.SocialType;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -93,6 +95,18 @@ public class JwtService {
         } catch (JwtException e) {      // 위 오류 다 아닐 경우 뜨는 오류
             throw new RuntimeException("토큰이 유효하지 않습니다.", e);
         }
+    }
+
+    public Claims parseClaims(HttpServletRequest request) {
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalStateException("토큰이 없습니다.");
+        }
+
+        String token = authHeader.substring(7);
+
+        return parseClaims(token, jwt_access_key);
     }
 
 

@@ -1,4 +1,4 @@
-package kr.yuhancert.spring.domain.login.dto;
+package kr.yuhancert.spring.domain.user.dto;
 
 import kr.yuhancert.spring.domain.certificate.dto.ScheduleDTO;
 import lombok.AllArgsConstructor;

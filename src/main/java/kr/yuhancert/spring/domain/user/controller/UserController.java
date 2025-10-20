@@ -1,10 +1,10 @@
-package kr.yuhancert.spring.domain.login.controller;
+package kr.yuhancert.spring.domain.user.controller;
 
 import ch.qos.logback.classic.Logger;
 import jakarta.servlet.http.HttpServletRequest;
 import kr.yuhancert.spring.domain.certificate.dto.ScheduleDTO;
-import kr.yuhancert.spring.domain.login.dto.UserDataDTO;
-import kr.yuhancert.spring.domain.login.service.UserService;
+import kr.yuhancert.spring.domain.user.dto.UserDataDTO;
+import kr.yuhancert.spring.domain.user.service.UserService;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +36,7 @@ public class UserController {
             UserDataDTO userDataDTO = userService.getUserData(request);
             return ResponseEntity.ok(userDataDTO);
         } catch (Exception e) {
-            logger.error("Error getting department list", e);
+            logger.error("Error getting user data", e);
             errorResponse = new HashMap<>();
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());
@@ -54,7 +54,7 @@ public class UserController {
             List<ScheduleDTO> scheduleDTOS = userService.getUserSchedule(request);
             return ResponseEntity.ok(scheduleDTOS);
         } catch (Exception e) {
-            logger.error("Error getting department list", e);
+            logger.error("Error getting user schedule list", e);
             errorResponse = new HashMap<>();
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());

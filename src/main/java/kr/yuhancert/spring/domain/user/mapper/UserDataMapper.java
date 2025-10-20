@@ -1,4 +1,4 @@
-package kr.yuhancert.spring.domain.login.mapper;
+package kr.yuhancert.spring.domain.user.mapper;
 
 import org.mapstruct.Mapper;
 import org.springframework.beans.factory.annotation.Qualifier;

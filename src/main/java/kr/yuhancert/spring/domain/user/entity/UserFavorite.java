@@ -1,7 +1,9 @@
-package kr.yuhancert.spring.domain.login.entity;
+package kr.yuhancert.spring.domain.user.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import kr.yuhancert.spring.domain.user.entity.User;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,6 +15,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @Entity
 @Table(name = "user_favorite")
 @NoArgsConstructor
+@AllArgsConstructor
 public class UserFavorite {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

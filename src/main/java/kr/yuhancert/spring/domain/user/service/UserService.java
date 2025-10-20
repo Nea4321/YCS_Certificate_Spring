@@ -1,4 +1,4 @@
-package kr.yuhancert.spring.domain.login.service;
+package kr.yuhancert.spring.domain.user.service;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
@@ -6,14 +6,15 @@ import kr.yuhancert.spring.domain.certificate.dto.ScheduleDTO;
 import kr.yuhancert.spring.domain.certificate.service.CertificateService;
 import kr.yuhancert.spring.domain.department.entity.DeptCert;
 import kr.yuhancert.spring.domain.department.repository.DeptCertRepository;
-import kr.yuhancert.spring.domain.login.dto.UserDataDTO;
-import kr.yuhancert.spring.domain.login.entity.User;
-import kr.yuhancert.spring.domain.login.entity.UserData;
-import kr.yuhancert.spring.domain.login.entity.UserFavorite;
-import kr.yuhancert.spring.domain.login.repository.UserDataRepository;
-import kr.yuhancert.spring.domain.login.repository.UserFavoriteRepository;
-import kr.yuhancert.spring.domain.login.repository.UserRepository;
-import org.springframework.http.HttpHeaders;
+import kr.yuhancert.spring.domain.login.service.JwtKeyService;
+import kr.yuhancert.spring.domain.login.service.JwtService;
+import kr.yuhancert.spring.domain.user.dto.UserDataDTO;
+import kr.yuhancert.spring.domain.user.entity.User;
+import kr.yuhancert.spring.domain.user.entity.UserData;
+import kr.yuhancert.spring.domain.user.entity.UserFavorite;
+import kr.yuhancert.spring.domain.user.repository.UserDataRepository;
+import kr.yuhancert.spring.domain.user.repository.UserFavoriteRepository;
+import kr.yuhancert.spring.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -56,24 +57,22 @@ public class UserService {
         // 아직 쓸 데이터가 일정밖에 없어서
         // 추후 보여줄 데이터 매퍼만들어서 수정
 
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalStateException("토큰이 없습니다.");
-        }
-
-        String token = authHeader.substring(7);
-
-        Claims claims = jwtService.parseClaims(token, jwtKeyService.getAccessSecretKey());
+        Claims claims = jwtService.parseClaims(request);
 
         Long id = claims.get("id", Long.class);
 
-        userDataEntity = userDataRepository.findByUserUserId(id);
-        userFavoriteEntities = userFavoriteRepository.findAllByUserUserId(id);
+        userDataEntity = userDataRepository.findByUserId(id);
+        userFavoriteEntities = userFavoriteRepository.findAllById(id);
 
         return new UserDataDTO(getUserSchedule(userFavoriteEntities));
     }
 
+    /**
+     * 학과인지 자격증인지 따라 스케줄 분리
+     * 학과면 학과 연동 자격증 가져와 스케줗 요청
+     * 자격증이면 바로 스케줄 요청
+     * 중복 되는 스케줄 있으면 넘김
+     */
     public List<ScheduleDTO> getUserSchedule(List<UserFavorite> __userFavorites) {
 
         Map<Long, ScheduleDTO> scheduleMap = new HashMap<>();
@@ -111,19 +110,11 @@ public class UserService {
 
     public List<ScheduleDTO> getUserSchedule(HttpServletRequest request) {
 
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalStateException("토큰이 없습니다.");
-        }
-
-        String token = authHeader.substring(7);
-
-        Claims claims = jwtService.parseClaims(token, jwtKeyService.getAccessSecretKey());
+        Claims claims = jwtService.parseClaims(request);
 
         Long id = claims.get("id", Long.class);
 
-        userFavoriteEntities = userFavoriteRepository.findAllByUserUserId(id);
+        userFavoriteEntities = userFavoriteRepository.findAllById(id);
 
         return getUserSchedule(userFavoriteEntities);
     }

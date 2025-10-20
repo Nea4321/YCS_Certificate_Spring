@@ -1,7 +1,8 @@
-package kr.yuhancert.spring.domain.login.entity;
+package kr.yuhancert.spring.domain.user.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import kr.yuhancert.spring.domain.user.entity.User;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

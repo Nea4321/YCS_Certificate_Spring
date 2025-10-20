@@ -1,6 +1,6 @@
-package kr.yuhancert.spring.domain.login.repository;
+package kr.yuhancert.spring.domain.user.repository;
 
-import kr.yuhancert.spring.domain.login.entity.UserData;
+import kr.yuhancert.spring.domain.user.entity.UserData;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserDataRepository extends JpaRepository<UserData, Long> {
     @EntityGraph(attributePaths = {"user"})
-    UserData findByUserUserId(Long userId);
+    UserData findByUserId(Long userId);
 }
