@@ -49,7 +49,7 @@ public class UserService {
         Optional<User> checkUser = userRepository.findByUserEmail(socialUserResponseDTO.getEmail());
 
         if(checkUser.isPresent()) {
-            throw new IllegalStateException("이미 가입된  소셜 사용자입니다.");
+            if(checkUser.get().getSocialType() != socialUserResponseDTO.getSocialType()) {throw new IllegalStateException("이미 가입된  소셜 사용자입니다.");}
         }
         else{
             userRepository.save(
