@@ -1,6 +1,6 @@
 package kr.yuhancert.spring.infra.login.api.kakao;
 
-import kr.yuhancert.spring.domain.login.dto.KakaoRequestAccessTokenDTO;
+import kr.yuhancert.spring.domain.auth.dto.KakaoRequestAccessTokenDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
