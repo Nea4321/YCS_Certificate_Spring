@@ -9,9 +9,12 @@ import java.util.List;
 
 @Repository
 public interface DeptCertRepository extends JpaRepository<DeptCert, Long> {
-    @EntityGraph(attributePaths = {"certificate", "department", "faculty", "major", "deptMap"})
+    @EntityGraph(attributePaths = {"certificate", "deptMap"})
     List<DeptCert> findAll();
 
-    @EntityGraph(attributePaths = {"certificate", "department", "faculty", "major", "deptMap"})
+    @EntityGraph(attributePaths = {"certificate", "deptMap"})
     List<DeptCert> findAllByDeptMapId(Long deptMapId);
+
+    @EntityGraph(attributePaths = {"certificate", "deptMap"})
+    List<DeptCert> findAllByDeptMapIdIn(List<Long> deptMapIds);
 }

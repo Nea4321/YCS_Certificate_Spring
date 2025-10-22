@@ -2,7 +2,8 @@ package kr.yuhancert.spring.domain.user.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import kr.yuhancert.spring.domain.user.entity.User;
+import kr.yuhancert.spring.domain.auth.entity.User;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,6 +18,7 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "user_data")
 @NoArgsConstructor
+@AllArgsConstructor
 public class UserData {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

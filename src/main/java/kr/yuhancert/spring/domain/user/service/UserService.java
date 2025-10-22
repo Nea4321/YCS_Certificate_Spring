@@ -6,15 +6,15 @@ import kr.yuhancert.spring.domain.certificate.dto.ScheduleDTO;
 import kr.yuhancert.spring.domain.certificate.service.CertificateService;
 import kr.yuhancert.spring.domain.department.entity.DeptCert;
 import kr.yuhancert.spring.domain.department.repository.DeptCertRepository;
-import kr.yuhancert.spring.domain.login.service.JwtKeyService;
-import kr.yuhancert.spring.domain.login.service.JwtService;
+import kr.yuhancert.spring.domain.auth.service.JwtKeyService;
+import kr.yuhancert.spring.domain.auth.service.JwtService;
 import kr.yuhancert.spring.domain.user.dto.UserDataDTO;
-import kr.yuhancert.spring.domain.user.entity.User;
+import kr.yuhancert.spring.domain.auth.entity.User;
 import kr.yuhancert.spring.domain.user.entity.UserData;
 import kr.yuhancert.spring.domain.user.entity.UserFavorite;
 import kr.yuhancert.spring.domain.user.repository.UserDataRepository;
 import kr.yuhancert.spring.domain.user.repository.UserFavoriteRepository;
-import kr.yuhancert.spring.domain.user.repository.UserRepository;
+import kr.yuhancert.spring.domain.auth.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -62,9 +62,70 @@ public class UserService {
         Long id = claims.get("id", Long.class);
 
         userDataEntity = userDataRepository.findByUserId(id);
-        userFavoriteEntities = userFavoriteRepository.findAllById(id);
+        userFavoriteEntities = userFavoriteRepository.findAllByUser_Id(id);
 
-        return new UserDataDTO(getUserSchedule(userFavoriteEntities));
+        return new UserDataDTO(getUserSchedule(request));
+    }
+
+    public List<Long> getUserCertIdList(Map<String, Map<Long, UserFavorite>> __userFavorites) {
+
+        Map<Long, UserFavorite> deptFavoriteMap = __userFavorites.getOrDefault("department", Map.of());
+
+        List<DeptCert> deptCertList = deptCertRepository.findAllByDeptMapIdIn(deptFavoriteMap.keySet().stream().toList());
+
+        Set<Long> idSet = deptCertList.stream()
+                .map(dc -> dc.getCertificate().getId())
+                .collect(Collectors.toSet());
+
+
+        Map<Long, UserFavorite> certFavoriteMap =
+                __userFavorites.getOrDefault("certificate", Map.of());
+
+        certFavoriteMap.values()
+                .forEach(fav -> idSet.add(fav.getTypeId()));
+
+
+        Map<Long, UserFavorite> cancelFavoriteMap =
+                __userFavorites.getOrDefault("cancel", Map.of());
+
+        cancelFavoriteMap.values()
+                .forEach(fav -> idSet.remove(fav.getTypeId()));
+
+        return new ArrayList<>(idSet);
+    }
+
+    public List<ScheduleDTO> getUserSchedule(Map<String,Map<Long, UserFavorite>> __userFavorites) {
+
+        if (__userFavorites == null) {
+            return List.of(); // 빈 리스트 반환
+        }
+
+        List<Long> idList = getUserCertIdList(__userFavorites);
+
+
+       return certificateService.getSchedule(idList);
+    }
+
+    public List<ScheduleDTO> getUserSchedule(HttpServletRequest request) {
+
+        Claims claims = jwtService.parseClaims(request);
+
+        Long id = claims.get("id", Long.class);
+
+        userFavoriteEntities = userFavoriteRepository.findAllByUser_Id(id);
+
+        return getUserSchedule(toUserFavoriteMapMap(userFavoriteEntities));
+    }
+
+    public Map<String, Map<Long, UserFavorite>> toUserFavoriteMapMap(List<UserFavorite> __userFavorites) {
+        return __userFavorites.stream()
+                .collect(Collectors.groupingBy(
+                        UserFavorite::getType, // type 기준으로 묶기 ("certificate", "cancel", "department")
+                        Collectors.toMap(
+                                UserFavorite::getTypeId, // 내부 key: typeId (Long)
+                                fav -> fav
+                        )
+                ));
     }
 
     /**
@@ -72,7 +133,10 @@ public class UserService {
      * 학과면 학과 연동 자격증 가져와 스케줗 요청
      * 자격증이면 바로 스케줄 요청
      * 중복 되는 스케줄 있으면 넘김
+     * 로직변경 ㅋㅋㅋㅋ
+     * 아까우니 주석처리
      */
+    /*
     public List<ScheduleDTO> getUserSchedule(List<UserFavorite> __userFavorites) {
 
         Map<Long, ScheduleDTO> scheduleMap = new HashMap<>();
@@ -107,15 +171,6 @@ public class UserService {
 
         return new ArrayList<>(scheduleMap.values());
     }
+    */
 
-    public List<ScheduleDTO> getUserSchedule(HttpServletRequest request) {
-
-        Claims claims = jwtService.parseClaims(request);
-
-        Long id = claims.get("id", Long.class);
-
-        userFavoriteEntities = userFavoriteRepository.findAllById(id);
-
-        return getUserSchedule(userFavoriteEntities);
-    }
 }

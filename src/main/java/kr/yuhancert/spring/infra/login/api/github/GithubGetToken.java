@@ -1,6 +1,6 @@
 package kr.yuhancert.spring.infra.login.api.github;
 
-import kr.yuhancert.spring.domain.login.dto.GithubRequestAccessTokenDTO;
+import kr.yuhancert.spring.domain.auth.dto.GithubRequestAccessTokenDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

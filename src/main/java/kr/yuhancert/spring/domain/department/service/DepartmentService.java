@@ -1,5 +1,7 @@
 package kr.yuhancert.spring.domain.department.service;
 
+import kr.yuhancert.spring.domain.certificate.dto.ScheduleDTO;
+import kr.yuhancert.spring.domain.certificate.service.CertificateService;
 import kr.yuhancert.spring.domain.department.dto.*;
 import kr.yuhancert.spring.domain.department.entity.*;
 import kr.yuhancert.spring.domain.department.mapper.DeptListMapper;
@@ -24,6 +26,7 @@ import org.slf4j.LoggerFactory;
 public class DepartmentService {
 
     private final CacheService cacheService;
+    private final CertificateService certificateService;
     private final DepartmentRepository departmentRepository;
     private final FacultyRepository facultyRepository;
     private final MajorRepository majorRepository;
@@ -44,6 +47,7 @@ public class DepartmentService {
 
 
     public DepartmentService(CacheService __cacheService,
+                             CertificateService __certificateService,
                              DepartmentRepository __departmentRepository,
                              FacultyRepository __facultyRepository,
                              MajorRepository __majorRepository,
@@ -56,6 +60,7 @@ public class DepartmentService {
                              DeptMapDataMapper __deptMapDataMapper) {
 
         this.cacheService = __cacheService;
+        this.certificateService = __certificateService;
         this.departmentRepository = __departmentRepository;
         this.facultyRepository = __facultyRepository;
         this.majorRepository = __majorRepository;
@@ -146,6 +151,40 @@ public class DepartmentService {
         cacheService.put(CacheList.DEPT_DATA_CACHE.getName(), __id, deptMapDataDTO);
 
         return deptMapDataDTO;
+
+    }
+
+    public List<Long> getDeptCertIds(Long __id) {
+        deptCertEntities = deptCertRepository.findAllByDeptMapId(__id);
+        return deptCertEntities.stream()
+                .map(dc -> dc.getCertificate().getId())
+                .toList();
+    }
+
+    public List<Long> getDeptCertIds(List<Long> __ids) {
+        deptCertEntities = deptCertRepository.findAll();
+        return deptCertEntities.stream()
+                .filter(dc -> __ids.contains(dc.getCertificate().getId()))
+                .map(dc -> dc.getCertificate().getId())
+                .collect(Collectors.toSet())
+                .stream()
+                .toList();
+    }
+
+    public List<ScheduleDTO> getDeptSchedule(Long __id) {
+
+        List<ScheduleDTO> cacheSchedule = cacheService.getList(CacheList.DEPT_SCHEDULE_CACHE.getName(), __id, ScheduleDTO.class);
+        if (cacheSchedule != null) {
+            return cacheSchedule;
+        }
+
+        List<Long> certIdList = getDeptCertIds(__id);
+
+        List<ScheduleDTO> scheduleDTOList = certificateService.getSchedule(certIdList);
+
+        cacheService.put(CacheList.DEPT_SCHEDULE_CACHE.getName(), __id, scheduleDTOList);
+
+        return scheduleDTOList;
 
     }
 

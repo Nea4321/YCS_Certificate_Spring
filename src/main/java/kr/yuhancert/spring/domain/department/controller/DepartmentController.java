@@ -2,6 +2,7 @@ package kr.yuhancert.spring.domain.department.controller;
 
 import ch.qos.logback.classic.Logger;
 import jakarta.validation.Valid;
+import kr.yuhancert.spring.domain.certificate.dto.ScheduleDTO;
 import kr.yuhancert.spring.domain.department.dto.*;
 import kr.yuhancert.spring.domain.department.entity.Department;
 import kr.yuhancert.spring.domain.department.mapper.DeptMapMapper;
@@ -78,6 +79,24 @@ public class DepartmentController {
             return ResponseEntity.ok(deptMapDataDTO);
         } catch (Exception e) {
             logger.error("Error getting department data", e);
+            errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
+    @GetMapping("/schedule/{id}")
+    public ResponseEntity<?> getDeptSchedule(@PathVariable("id") Long id) {
+        try {
+            List<ScheduleDTO> scheduleDTOList = departmentService.getDeptSchedule(id);
+            return ResponseEntity.ok(scheduleDTOList);
+        } catch (Exception e) {
+            logger.error("Error getting department schedule", e);
             errorResponse = new HashMap<>();
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());

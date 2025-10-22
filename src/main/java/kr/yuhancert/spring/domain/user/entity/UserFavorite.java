@@ -2,7 +2,7 @@ package kr.yuhancert.spring.domain.user.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import kr.yuhancert.spring.domain.user.entity.User;
+import kr.yuhancert.spring.domain.auth.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,16 +18,21 @@ import org.hibernate.annotations.OnDeleteAction;
 @AllArgsConstructor
 public class UserFavorite {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name = "id", nullable = false)
     private Long id;
 
-    @MapsId
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    /**
+     * 타입으로
+     * department, certificate 각각 학과, 자격증 페이지에서  즐겨찾기
+     * cancel 학과 즐겨찾기를 했지만 일부 자격증은 보고싶지 않을때
+     */
     @NotNull
     @Column(name = "type", nullable = false, length = Integer.MAX_VALUE)
     private String type;
