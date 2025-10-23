@@ -3,6 +3,7 @@ package kr.yuhancert.spring.domain.user.controller;
 import ch.qos.logback.classic.Logger;
 import jakarta.servlet.http.HttpServletRequest;
 import kr.yuhancert.spring.domain.user.dto.UserFavoriteDTO;
+import kr.yuhancert.spring.domain.user.entity.FavoriteType;
 import kr.yuhancert.spring.domain.user.service.UserFavoriteService;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -43,7 +44,7 @@ public class UserFavoriteController {
     }
 
     @GetMapping("/{type}/{id}")
-    public ResponseEntity<?> getUserFavoriteById(HttpServletRequest request, @PathVariable("type") String type, @PathVariable("id") Long id){
+    public ResponseEntity<?> getIsFavoriteById(HttpServletRequest request, @PathVariable("type") FavoriteType type, @PathVariable("id") Long id){
         try {
             Boolean isFavorite = userFavoriteService.isFavorite(request, type, id);
             return ResponseEntity.ok(isFavorite);
@@ -60,7 +61,7 @@ public class UserFavoriteController {
     }
 
     @PutMapping("/{type}/{id}")
-    public ResponseEntity<?> addUserFavorite(HttpServletRequest request, @PathVariable("type") String type, @PathVariable("id") Long id){
+    public ResponseEntity<?> addUserFavorite(HttpServletRequest request, @PathVariable("type") FavoriteType type, @PathVariable("id") Long id){
         try {
             userFavoriteService.addUserFavorite(request, type, id);
             return ResponseEntity.ok().build();
@@ -77,7 +78,7 @@ public class UserFavoriteController {
     }
 
     @DeleteMapping("/{type}/{id}")
-    public ResponseEntity<?> deleteUserFavorite(HttpServletRequest request, @PathVariable("type") String type, @PathVariable("id") Long id){
+    public ResponseEntity<?> deleteUserFavorite(HttpServletRequest request, @PathVariable("type") FavoriteType type, @PathVariable("id") Long id){
         try {
             userFavoriteService.deleteUserFavorite(request, type, id);
             return ResponseEntity.ok().build();

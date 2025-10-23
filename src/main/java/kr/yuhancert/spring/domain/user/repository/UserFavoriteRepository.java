@@ -20,10 +20,10 @@ public interface UserFavoriteRepository extends JpaRepository<UserFavorite, Long
     Optional<UserFavorite> findByUser_IdAndTypeAndTypeId(Long userId, String type, Long typeId);
 
     @EntityGraph(attributePaths = {"user"})
-    Boolean existsByUser_IdAndTypeAndTypeId(Long userId, String type, Long typeId);
+    boolean existsByUser_IdAndTypeAndTypeId(Long userId, String type, Long typeId);
 
     @EntityGraph(attributePaths = {"user"})
-    Boolean existsByUser_IdAndType(Long userId, String type);
+    boolean existsByUser_IdAndType(Long userId, String type);
 
     void deleteAllByUser_IdAndType(Long userId, String type);
 

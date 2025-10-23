@@ -10,6 +10,7 @@ import kr.yuhancert.spring.domain.auth.service.JwtKeyService;
 import kr.yuhancert.spring.domain.auth.service.JwtService;
 import kr.yuhancert.spring.domain.user.dto.UserDataDTO;
 import kr.yuhancert.spring.domain.auth.entity.User;
+import kr.yuhancert.spring.domain.user.entity.FavoriteType;
 import kr.yuhancert.spring.domain.user.entity.UserData;
 import kr.yuhancert.spring.domain.user.entity.UserFavorite;
 import kr.yuhancert.spring.domain.user.repository.UserDataRepository;
@@ -69,7 +70,8 @@ public class UserService {
 
     public List<Long> getUserCertIdList(Map<String, Map<Long, UserFavorite>> __userFavorites) {
 
-        Map<Long, UserFavorite> deptFavoriteMap = __userFavorites.getOrDefault("department", Map.of());
+        Map<Long, UserFavorite> deptFavoriteMap =
+                __userFavorites.getOrDefault(FavoriteType.department.toString(), Map.of());
 
         List<DeptCert> deptCertList = deptCertRepository.findAllByDeptMapIdIn(deptFavoriteMap.keySet().stream().toList());
 
@@ -79,14 +81,14 @@ public class UserService {
 
 
         Map<Long, UserFavorite> certFavoriteMap =
-                __userFavorites.getOrDefault("certificate", Map.of());
+                __userFavorites.getOrDefault(FavoriteType.certificate.toString(), Map.of());
 
         certFavoriteMap.values()
                 .forEach(fav -> idSet.add(fav.getTypeId()));
 
 
         Map<Long, UserFavorite> cancelFavoriteMap =
-                __userFavorites.getOrDefault("cancel", Map.of());
+                __userFavorites.getOrDefault(FavoriteType.cancel.toString(), Map.of());
 
         cancelFavoriteMap.values()
                 .forEach(fav -> idSet.remove(fav.getTypeId()));

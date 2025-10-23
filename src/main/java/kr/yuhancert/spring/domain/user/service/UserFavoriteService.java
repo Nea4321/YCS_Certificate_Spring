@@ -7,6 +7,7 @@ import kr.yuhancert.spring.domain.auth.service.JwtService;
 import kr.yuhancert.spring.domain.department.entity.DeptCert;
 import kr.yuhancert.spring.domain.department.repository.DeptCertRepository;
 import kr.yuhancert.spring.domain.user.dto.UserFavoriteDTO;
+import kr.yuhancert.spring.domain.user.entity.FavoriteType;
 import kr.yuhancert.spring.domain.user.entity.UserFavorite;
 import kr.yuhancert.spring.domain.user.mapper.UserFavoriteMapper;
 import kr.yuhancert.spring.domain.user.repository.UserFavoriteRepository;
@@ -29,10 +30,6 @@ public class UserFavoriteService {
     private final UserFavoriteMapper userFavoriteMapper;
     private List<UserFavorite> userFavoriteEntities;
 
-    private final String DEPT = "department";
-    private final String CERT = "certificate";
-    private final String CANCEL = "cancel";
-
     public UserFavoriteService(JwtService __jwtService,
                                UserService __userService,
                                UserFavoriteRepository __userFavoriteRepository,
@@ -51,12 +48,12 @@ public class UserFavoriteService {
 
         Claims claims = jwtService.parseClaims(request);
 
-        userFavoriteEntities = userFavoriteRepository.findAllByUser_IdAndTypeNot(claims.get("id", Long.class), CANCEL);
+        userFavoriteEntities = userFavoriteRepository.findAllByUser_IdAndTypeNot(claims.get("id", Long.class), FavoriteType.cancel.toString());
 
         return userFavoriteMapper.toUserFavoriteDTOList(userFavoriteEntities);
     }
 
-    public Boolean isFavorite(HttpServletRequest request, String __type, Long __typeId) {
+    public Boolean isFavorite(HttpServletRequest request, FavoriteType __type, Long __typeId) {
 
         Claims claims = jwtService.parseClaims(request);
 
@@ -64,9 +61,9 @@ public class UserFavoriteService {
 
         Map<String, Map<Long, UserFavorite>> userFavoriteMapMap = userService.toUserFavoriteMapMap(userFavoriteList);
 
-        if (__type == DEPT) {
+        if (__type == FavoriteType.department) {
 
-            Map<Long, UserFavorite> deptFavoriteMap = userFavoriteMapMap.getOrDefault(DEPT, Map.of());
+            Map<Long, UserFavorite> deptFavoriteMap = userFavoriteMapMap.getOrDefault(FavoriteType.department.toString(), Map.of());
 
             return deptFavoriteMap.containsKey(__typeId);
 
@@ -78,22 +75,22 @@ public class UserFavoriteService {
 
     }
 
-    public void addUserFavorite(HttpServletRequest request, String __type, Long __typeId) {
+    public void addUserFavorite(HttpServletRequest request, FavoriteType __type, Long __typeId) {
 
         Claims claims = jwtService.parseClaims(request);
 
         Long userId = claims.get("id", Long.class);
 
-        userRepository.findById(userId)
+        User userEntity = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
 
         //자격증일 경우 cancel 타입이 있는지 확인
-        if (__type == CERT) {
+        if (__type == FavoriteType.certificate) {
             //있으면 제거
-            if (userFavoriteRepository.existsByUser_IdAndTypeAndTypeId(userId, CANCEL, __typeId)) {
+            if (userFavoriteRepository.existsByUser_IdAndTypeAndTypeId(userId, FavoriteType.cancel.toString(), __typeId)) {
 
                 userFavoriteRepository.delete(
-                        userFavoriteRepository.findByUser_IdAndTypeAndTypeId(userId, CANCEL, __typeId).orElseThrow()
+                        userFavoriteRepository.findByUser_IdAndTypeAndTypeId(userId, FavoriteType.cancel.toString(), __typeId).orElseThrow()
                 );
 
                 return;
@@ -101,14 +98,14 @@ public class UserFavoriteService {
         }
 
         UserFavorite addFavorite = new UserFavorite();
-        addFavorite.setUser(userRepository.findById(userId).orElseThrow());
-        addFavorite.setType(__type);
+        addFavorite.setUser(userEntity);
+        addFavorite.setType(__type.toString());
         addFavorite.setTypeId(__typeId);
 
         userFavoriteRepository.save(addFavorite);
     }
 
-    public void deleteUserFavorite(HttpServletRequest request, String __type,Long __typeId) {
+    public void deleteUserFavorite(HttpServletRequest request, FavoriteType __type,Long __typeId) {
 
         Claims claims = jwtService.parseClaims(request);
 
@@ -119,16 +116,12 @@ public class UserFavoriteService {
 
         Map<String, Map<Long, UserFavorite>> userFavoriteMapMap = userService.toUserFavoriteMapMap(userFavoriteRepository.findAllByUser_Id(userId));
 
+        Map<Long, UserFavorite> deptFavorite = userFavoriteMapMap.get(FavoriteType.department.toString());
+
         //자격증일 경우
-        if (__type == CERT) {
+        if (__type == FavoriteType.certificate) {
 
-            Map<Long, UserFavorite> deptFavorite = userFavoriteMapMap.get(DEPT);
-
-            List<DeptCert> deptCertList = deptCertRepository.findAllByDeptMapIdIn(deptFavorite.values().stream()
-                    .map(UserFavorite::getTypeId)
-                    .collect(Collectors.toSet())
-                    .stream().toList()
-            );
+            List<DeptCert> deptCertList = deptCertRepository.findAllByDeptMapIdIn(deptFavorite.keySet().stream().toList());
 
             Set<Long> idSet = deptCertList.stream()
                     .map(dc -> dc.getCertificate().getId())
@@ -140,14 +133,14 @@ public class UserFavoriteService {
                 UserFavorite addFavorite = new UserFavorite();
 
                 addFavorite.setUser(userEntity);
-                addFavorite.setType(CANCEL);
+                addFavorite.setType(FavoriteType.cancel.toString());
                 addFavorite.setTypeId(__typeId);
 
                 userFavoriteRepository.save(addFavorite);
             }
 
             //자격증 있으면 삭제
-            Map<Long, UserFavorite> certFavoriteMap = userFavoriteMapMap.get(CERT);
+            Map<Long, UserFavorite> certFavoriteMap = userFavoriteMapMap.get(FavoriteType.certificate.toString());
 
             if (certFavoriteMap.containsKey(__typeId))
                 userFavoriteRepository.delete(certFavoriteMap.get(__typeId));
@@ -155,15 +148,13 @@ public class UserFavoriteService {
             return;
         }
 
-        Map<Long, UserFavorite> deptFavorite = userFavoriteMapMap.get(DEPT);
-
         if (!deptFavorite.containsKey(__typeId)) return;
 
         userFavoriteRepository.delete(deptFavorite.get(__typeId));
 
         //만약 학과 즐겨찾기가 없으면 cancel 다 삭제
-        if (!userFavoriteRepository.existsByUser_IdAndType(userId, DEPT))
-            userFavoriteRepository.deleteAllByUser_IdAndType(userId,CANCEL);
+        if (!userFavoriteRepository.existsByUser_IdAndType(userId, FavoriteType.department.toString())) {}
+            userFavoriteRepository.deleteAllByUser_IdAndType(userId, FavoriteType.cancel.toString());
 
     }
 
