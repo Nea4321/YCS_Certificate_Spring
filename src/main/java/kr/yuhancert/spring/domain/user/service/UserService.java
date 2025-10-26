@@ -59,11 +59,11 @@ public class UserService {
         // 추후 보여줄 데이터 매퍼만들어서 수정
 
         Claims claims = jwtService.parseClaims(request);
+        Object idObj = claims.get("id");
+        Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
 
-        Long id = claims.get("id", Long.class);
-
-        userDataEntity = userDataRepository.findByUserId(id);
-        userFavoriteEntities = userFavoriteRepository.findAllByUser_Id(id);
+        userDataEntity = userDataRepository.findByUserId(userId);
+        userFavoriteEntities = userFavoriteRepository.findAllByUser_Id(userId);
 
         return new UserDataDTO(getUserSchedule(request));
     }
@@ -111,14 +111,16 @@ public class UserService {
     public List<ScheduleDTO> getUserSchedule(HttpServletRequest request) {
 
         Claims claims = jwtService.parseClaims(request);
+        Object idObj = claims.get("id");
+        Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
 
-        Long id = claims.get("id", Long.class);
-
-        userFavoriteEntities = userFavoriteRepository.findAllByUser_Id(id);
+        userFavoriteEntities = userFavoriteRepository.findAllByUser_Id(userId);
 
         return getUserSchedule(toUserFavoriteMapMap(userFavoriteEntities));
     }
 
+    // ex) department - user_id(1) - type_id(2,3,4)...
+    // user_favorite db에 들어가 있는 데이터를  [(학과,자격증,캔슬) - [(유저 아이디),(아이디)]]  이런식으로 저장하는 맵핑 함수.
     public Map<String, Map<Long, UserFavorite>> toUserFavoriteMapMap(List<UserFavorite> __userFavorites) {
         return __userFavorites.stream()
                 .collect(Collectors.groupingBy(
@@ -129,6 +131,7 @@ public class UserService {
                         )
                 ));
     }
+
 
     /**
      * 학과인지 자격증인지 따라 스케줄 분리

@@ -2,6 +2,7 @@ package kr.yuhancert.spring.domain.auth.service;
 
 
 import io.jsonwebtoken.*;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import kr.yuhancert.spring.domain.auth.entity.SocialType;
 import org.springframework.http.HttpHeaders;
@@ -98,13 +99,28 @@ public class JwtService {
     }
 
     public Claims parseClaims(HttpServletRequest request) {
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        String token = null;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalStateException("토큰이 없습니다.");
+        // Authorization 헤더 우선
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7).trim();
+        } else {
+            // 쿠키에서 토큰 확인
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie c : cookies) {
+                    if (c.getName().equals("access_token")) {
+                        token = c.getValue();
+                        break;
+                    }
+                }
+            }
         }
 
-        String token = authHeader.substring(7);
+        if (token == null || token.isEmpty()) {
+            throw new IllegalStateException("토큰이 없습니다.");
+        }
 
         return parseClaims(token, jwt_access_key);
     }

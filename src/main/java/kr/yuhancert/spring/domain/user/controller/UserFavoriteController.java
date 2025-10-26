@@ -30,6 +30,7 @@ public class UserFavoriteController {
     public ResponseEntity<?> getUserFavorite(HttpServletRequest request){
         try {
             List<UserFavoriteDTO> userFavoriteDTO = userFavoriteService.getUserFavorite(request);
+            logger.info(userFavoriteDTO.toString());
             return ResponseEntity.ok(userFavoriteDTO);
         } catch (Exception e) {
             logger.error("Error getting user favorite list", e);
@@ -44,7 +45,7 @@ public class UserFavoriteController {
     }
 
     @GetMapping("/{type}/{id}")
-    public ResponseEntity<?> getIsFavoriteById(HttpServletRequest request, @PathVariable("type") FavoriteType type, @PathVariable("id") Long id){
+    public ResponseEntity<?> getIsFavoriteById(@PathVariable("type") FavoriteType type, @PathVariable("id") Long id, HttpServletRequest request){
         try {
             Boolean isFavorite = userFavoriteService.isFavorite(request, type, id);
             return ResponseEntity.ok(isFavorite);
@@ -61,7 +62,7 @@ public class UserFavoriteController {
     }
 
     @PutMapping("/{type}/{id}")
-    public ResponseEntity<?> addUserFavorite(HttpServletRequest request, @PathVariable("type") FavoriteType type, @PathVariable("id") Long id){
+    public ResponseEntity<?> addUserFavorite(@PathVariable("type") FavoriteType type, @PathVariable("id") Long id, HttpServletRequest request){
         try {
             userFavoriteService.addUserFavorite(request, type, id);
             return ResponseEntity.ok().build();
@@ -78,7 +79,7 @@ public class UserFavoriteController {
     }
 
     @DeleteMapping("/{type}/{id}")
-    public ResponseEntity<?> deleteUserFavorite(HttpServletRequest request, @PathVariable("type") FavoriteType type, @PathVariable("id") Long id){
+    public ResponseEntity<?> deleteUserFavorite(@PathVariable("type") FavoriteType type, @PathVariable("id") Long id, HttpServletRequest request){
         try {
             userFavoriteService.deleteUserFavorite(request, type, id);
             return ResponseEntity.ok().build();
