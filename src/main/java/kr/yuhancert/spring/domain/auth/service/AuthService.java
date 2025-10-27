@@ -37,7 +37,7 @@ public class AuthService {
     }
 
     // 소셜 로그인(구글,카카오..) 처리 로직
-    public SocialUserResponseDTO doSocialLogin(SocialLoginRequestDTO request) {
+    public ResponseEntity<?> doSocialLogin(SocialLoginRequestDTO request, HttpServletResponse response) {
         // 소셜 타입을 읽어서 어떤 서비스를 적용할건지 정함.
         SocialLoginService loginService = this.getLoginService(request.getSocialType());
         // 위에서 적용된 서비스를 기반으로 액세스 토큰을 받아옴.
@@ -47,6 +47,7 @@ public class AuthService {
         log.info("socialUserResponse {} ", socialUserResponseDTO.toString());
 
         Optional<User> checkUser = userRepository.findByUserEmail(socialUserResponseDTO.getEmail());
+        checkUser.ifPresent(user -> {socialUserResponseDTO.setId(user.getId());});
 
         if(checkUser.isPresent()) {
             if(checkUser.get().getSocialType() != socialUserResponseDTO.getSocialType()) {throw new IllegalStateException("이미 가입된  소셜 사용자입니다.");}
@@ -63,7 +64,14 @@ public class AuthService {
                 );
         }
 
-        return socialUserResponseDTO;
+        Map<String, String> token = Jwt_Token_Create(socialUserResponseDTO.getId(),
+                socialUserResponseDTO.getName(),
+                socialUserResponseDTO.getEmail(),
+                socialUserResponseDTO.getSocialType(),
+                socialUserResponseDTO.getRole(),
+                response);
+
+        return ResponseEntity.ok(token);
     }
 
 
