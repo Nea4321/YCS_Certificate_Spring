@@ -25,7 +25,7 @@ public class FailureExitListener implements SpringApplicationRunListener {
         Throwable rootCause = NestedExceptionUtils.getMostSpecificCause(exception);
         String message = rootCause != null ? rootCause.getMessage() : null;
 
-        if (message != null && (message.contains("Max client") || message.contains("Too many connections"))) {
+        if (message != null && (message.contains("Max client") || message.contains("Unable to determine Dialect without JDBC metadata"))) {
 
             // Max Client 에러가 발생했을 때 실행할 코드
             System.err.println("🚨 Max Client Exceeded Error Detected! Initiating specific cleanup...");
