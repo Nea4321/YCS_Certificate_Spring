@@ -35,7 +35,7 @@ class TestWebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         logger.info("Applying CORS configuration for TEST environment");
         registry.addMapping("/**")
-                .allowedOrigins(frontendUrl.split(","))
+                .allowedOriginPatterns("*")//frontendUrl.split(","))
                 .allowedMethods(allowedMethods.split(","))
                 .allowedHeaders("*")
                 .allowCredentials(true);
@@ -63,7 +63,7 @@ class DevelopWebConfig implements WebMvcConfigurer{
     public void addCorsMappings(CorsRegistry registry) {
         logger.info("Applying CORS configuration for TEST environment");
         registry.addMapping("/**")
-                .allowedOrigins(frontendUrl.split(","))
+                .allowedOriginPatterns("*")//frontendUrl.split(","))
                 .allowedMethods(allowedMethods.split(","))
                 .allowedHeaders("*")
                 .allowCredentials(true);
@@ -99,7 +99,7 @@ class ProductionWebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         logger.info("Applying CORS configuration for PRODUCTION environment");
         registry.addMapping("/**")
-                .allowedOrigins(frontendUrls.split(","))
+                .allowedOriginPatterns("*")//frontendUrls.split(","))
                 .allowedMethods(allowedMethods.split(","))
                 .allowedHeaders("*")
                 .allowCredentials(true)
