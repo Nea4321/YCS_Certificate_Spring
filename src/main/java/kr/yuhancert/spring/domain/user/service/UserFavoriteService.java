@@ -18,6 +18,7 @@ import kr.yuhancert.spring.domain.user.entity.UserFavorite;
 import kr.yuhancert.spring.domain.user.mapper.UserFavoriteMapper;
 import kr.yuhancert.spring.domain.user.repository.UserFavoriteRepository;
 import kr.yuhancert.spring.domain.auth.repository.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,31 +73,43 @@ public class UserFavoriteService {
         List<UserFavorite> favorites = userFavoriteRepository.findAllByUser_Id(userId);
         Map<String, Map<Long, UserFavorite>> userFavoriteMapMap = userService.toUserFavoriteMapMap(favorites);
 
-        userFavoriteMapMap.remove(FavoriteType.cancel.toString());
+        Map<Long, UserFavorite> cancelMap = userFavoriteMapMap.getOrDefault(FavoriteType.cancel.toString(), Map.of());
+        Set<Long> cancelCertIds = cancelMap.keySet();
 
-        Map<Long, UserFavorite> deptFavoriteMap = userFavoriteMapMap.get(FavoriteType.department.toString());
-        Map<Long, DeptMap> deptMapMap;
-        if (deptFavoriteMap != null) {
-            deptMapEntities = deptMapRepository.findAllByIdIn(deptFavoriteMap.keySet().stream().toList());
+        // 학과 즐겨찾기 Map
+        Map<Long, UserFavorite> deptFavoriteMap = userFavoriteMapMap.getOrDefault(FavoriteType.department.toString(), Map.of());
+        List<DeptMap> deptMapEntities = deptMapRepository.findAllByIdIn(new ArrayList<>(deptFavoriteMap.keySet()));
+        Map<Long, DeptMap> deptMapMap = deptMapEntities.stream()
+                .collect(Collectors.toMap(DeptMap::getId, dm -> dm));
+
+        // 직접 즐겨찾기 자격증 Map
+        Map<Long, UserFavorite> certFavoriteMap = userFavoriteMapMap.getOrDefault(FavoriteType.certificate.toString(), Map.of());
+        List<Certificate> certificateEntities = certificateRepository.findAllByIdIn(new ArrayList<>(certFavoriteMap.keySet()));
+        Map<Long, Certificate> certificateMap = certificateEntities.stream()
+                .collect(Collectors.toMap(Certificate::getId, c -> c));
+
+        // 학과 연관 자격증 추가
+        if (!deptFavoriteMap.isEmpty()) {
+            List<DeptCert> deptCertList = deptCertRepository.findAllByDeptMapIdIn(new ArrayList<>(deptFavoriteMap.keySet()));
+            Set<Long> linkedCertIds = deptCertList.stream()
+                    .map(dc -> dc.getCertificate().getId())
+                    .collect(Collectors.toSet());
+
+            // cancel 제외 + 기존 즐겨찾기 제외
+            Set<Long> newCertIds = linkedCertIds.stream()
+                    .filter(id -> !certificateMap.containsKey(id))
+                    .filter(id -> !cancelCertIds.contains(id))
+                    .collect(Collectors.toSet());
+
+            if (!newCertIds.isEmpty()) {
+                List<Certificate> linkedCertificates = certificateRepository.findAllByIdIn(new ArrayList<>(newCertIds));
+                Map<Long, Certificate> newCertMap = linkedCertificates.stream()
+                        .collect(Collectors.toMap(Certificate::getId, c -> c));
+                certificateMap.putAll(newCertMap);
+            }
         }
-        if (deptMapEntities != null) {
-            deptMapMap = deptMapEntities.stream().collect(Collectors.toMap(DeptMap::getId, dm -> dm));
-        } else {
-            deptMapMap = Map.of();
-        }
 
-
-        Map<Long, UserFavorite> certFavoriteMap = userFavoriteMapMap.get(FavoriteType.certificate.toString());
-        Map<Long, Certificate> certificateMap;
-        if (certFavoriteMap != null)
-            certificateEntities = certificateRepository.findAllByIdIn(certFavoriteMap.keySet().stream().toList());
-        if (certificateEntities != null) {
-            certificateMap = certificateEntities.stream().collect(Collectors.toMap(Certificate::getId, c -> c));
-        } else {
-            certificateMap = Map.of();
-        }
-
-        return userFavoriteMapper.toUserFavoriteDTOList(userFavoriteMapMap, deptMapMap, certificateMap);
+        return userFavoriteMapper.toUserFavoriteDTOList(userFavoriteMapMap, deptMapMap, certificateMap, deptCertRepository);
     }
 
 
@@ -141,6 +154,9 @@ public class UserFavoriteService {
         Object idObj = claims.get("id");
         Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
 
+        //(광클 했을때 중복 값 생성 제거)
+        userFavoriteRepository.deleteAll(userFavoriteRepository.findAllByUser_IdAndTypeAndTypeId(userId, __type.toString(), __typeId));
+
 
         User userEntity = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
@@ -181,7 +197,6 @@ public class UserFavoriteService {
         Object idObj = claims.get("id");
         Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
 
-
         User userEntity = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
 
@@ -204,16 +219,25 @@ public class UserFavoriteService {
                     userFavoriteRepository.delete(certFavoriteMap.get(__typeId));
                 }
 
-                //학과 거라면 cancel값 추가
+                //학과 거라면 cancel값 추가 + (광클 했을때 중복 값 생성 제거)
                 if (idSet.contains(__typeId)) {
 
-                    UserFavorite addFavorite = new UserFavorite();
+                    // 이미 있는 cancel 삭제
+                    userFavoriteRepository.deleteAllByUser_IdAndTypeAndTypeId(
+                            userId, FavoriteType.cancel.toString(), __typeId
+                    );
+                    // 새로 추가
+                    UserFavorite cancel = new UserFavorite();
+                    cancel.setUser(userRepository.getReferenceById(userId));
+                    cancel.setType(FavoriteType.cancel.toString());
+                    cancel.setTypeId(__typeId);
 
-                    addFavorite.setUser(userEntity);
-                    addFavorite.setType(FavoriteType.cancel.toString());
-                    addFavorite.setTypeId(__typeId);
-
-                    userFavoriteRepository.save(addFavorite);
+                    /// db에 unique 제약조건 걸리면 return으로 패스.
+                    try {
+                        userFavoriteRepository.save(cancel);
+                    } catch (DataIntegrityViolationException e) {
+                        return;
+                    }
                     return;
                 }
             }

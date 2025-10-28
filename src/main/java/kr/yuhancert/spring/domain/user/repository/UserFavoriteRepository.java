@@ -1,5 +1,6 @@
 package kr.yuhancert.spring.domain.user.repository;
 
+import jakarta.validation.constraints.NotNull;
 import kr.yuhancert.spring.domain.user.entity.UserFavorite;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -37,4 +38,8 @@ public interface UserFavoriteRepository extends JpaRepository<UserFavorite, Long
 
     @EntityGraph(attributePaths = {"user"})
     List<UserFavorite> findAllByUser_IdAndType(Long userId, String type);
+
+    List<UserFavorite> findAllByUser_IdAndTypeAndTypeId(long user_id, @NotNull String type, @NotNull Long typeId);
+
+    void deleteAllByUser_IdAndTypeAndTypeId(Long userId, String string, Long typeId);
 }
