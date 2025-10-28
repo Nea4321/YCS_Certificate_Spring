@@ -23,5 +23,5 @@ public interface DeptMapRepository extends JpaRepository<DeptMap, Long> {
     List<DeptMap> findByDepartment(Optional<Department> department);
 
     @EntityGraph(attributePaths = {"faculty", "department", "major"})
-    List<DeptMap> findAllByIdIn(Collection<Long> ids); // 추가
+    List<DeptMap> findAllByIdIn(List<Long> ids); // 추가
 }

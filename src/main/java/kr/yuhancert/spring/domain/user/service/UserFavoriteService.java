@@ -4,12 +4,14 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import kr.yuhancert.spring.domain.auth.entity.User;
 import kr.yuhancert.spring.domain.auth.service.JwtService;
+import kr.yuhancert.spring.domain.certificate.entity.Certificate;
 import kr.yuhancert.spring.domain.certificate.repository.CertificateRepository;
 import kr.yuhancert.spring.domain.department.entity.DeptCert;
 import kr.yuhancert.spring.domain.department.entity.DeptMap;
 import kr.yuhancert.spring.domain.department.repository.DepartmentRepository;
 import kr.yuhancert.spring.domain.department.repository.DeptCertRepository;
 import kr.yuhancert.spring.domain.department.repository.DeptMapRepository;
+import kr.yuhancert.spring.domain.department.service.DepartmentService;
 import kr.yuhancert.spring.domain.user.dto.UserFavoriteDTO;
 import kr.yuhancert.spring.domain.user.entity.FavoriteType;
 import kr.yuhancert.spring.domain.user.entity.UserFavorite;
@@ -27,6 +29,7 @@ public class UserFavoriteService {
 
     private final JwtService jwtService;
     private final UserService userService;
+    private final DepartmentService departmentService;
     private final UserFavoriteRepository userFavoriteRepository;
     private final UserRepository userRepository;
     private final DeptCertRepository deptCertRepository;
@@ -35,14 +38,21 @@ public class UserFavoriteService {
     private final CertificateRepository certificateRepository;
     private final DeptMapRepository deptMapRepository;
     private List<UserFavorite> userFavoriteEntities;
+    private List<DeptMap> deptMapEntities;
+    private List<Certificate> certificateEntities;
 
     public UserFavoriteService(JwtService __jwtService,
                                UserService __userService,
+                               DepartmentService __departmentService,
                                UserFavoriteRepository __userFavoriteRepository,
                                UserRepository __userRepository,
                                DeptCertRepository __deptCertRepository,
-                               UserFavoriteMapper __userFavoriteMapper, DepartmentRepository departmentRepository, CertificateRepository certificateRepository, DeptMapRepository deptMapRepository) {
+                               UserFavoriteMapper __userFavoriteMapper,
+                               DepartmentRepository departmentRepository,
+                               CertificateRepository certificateRepository,
+                               DeptMapRepository deptMapRepository) {
         this.jwtService = __jwtService;
+        this.departmentService = __departmentService;
         this.userFavoriteRepository = __userFavoriteRepository;
         this.userRepository = __userRepository;
         this.deptCertRepository = __deptCertRepository;
@@ -53,70 +63,40 @@ public class UserFavoriteService {
         this.deptMapRepository = deptMapRepository;
     }
 
-    /** 로그인 한 유저에 해당하는 즐찾 db 보여줌 */
-    @Transactional(readOnly = true)
+
     public List<UserFavoriteDTO> getUserFavorite(HttpServletRequest request) {
         Claims claims = jwtService.parseClaims(request);
         Object idObj = claims.get("id");
         Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0L;
 
-        // 모든 즐겨찾기 불러오기
         List<UserFavorite> favorites = userFavoriteRepository.findAllByUser_Id(userId);
+        Map<String, Map<Long, UserFavorite>> userFavoriteMapMap = userService.toUserFavoriteMapMap(favorites);
 
-        Map<Long, UserFavorite> deptMap = new HashMap<>();
-        Map<Long, UserFavorite> certMap = new HashMap<>();
-        Map<Long, UserFavorite> cancelMap = new HashMap<>();
+        userFavoriteMapMap.remove(FavoriteType.cancel.toString());
 
-        for (UserFavorite fav : favorites) {
-            switch (fav.getType()) {
-                case "department" -> deptMap.put(fav.getTypeId(), fav);
-                case "certificate" -> certMap.put(fav.getTypeId(), fav);
-                case "cancel" -> cancelMap.put(fav.getTypeId(), fav);
-            }
+        Map<Long, UserFavorite> deptFavoriteMap = userFavoriteMapMap.get(FavoriteType.department.toString());
+        Map<Long, DeptMap> deptMapMap;
+        if (deptFavoriteMap != null) {
+            deptMapEntities = deptMapRepository.findAllByIdIn(deptFavoriteMap.keySet().stream().toList());
+        }
+        if (deptMapEntities != null) {
+            deptMapMap = deptMapEntities.stream().collect(Collectors.toMap(DeptMap::getId, dm -> dm));
+        } else {
+            deptMapMap = Map.of();
         }
 
-        // 학과 → 연관된 자격증 찾기
-        List<DeptCert> deptCertList =
-                deptCertRepository.findAllByDeptMapIdIn(new ArrayList<>(deptMap.keySet()));
 
-        Set<Long> certificateIds = deptCertList.stream()
-                .map(dc -> dc.getCertificate().getId())
-                .collect(Collectors.toSet());
+        Map<Long, UserFavorite> certFavoriteMap = userFavoriteMapMap.get(FavoriteType.certificate.toString());
+        Map<Long, Certificate> certificateMap;
+        if (certFavoriteMap != null)
+            certificateEntities = certificateRepository.findAllByIdIn(certFavoriteMap.keySet().stream().toList());
+        if (certificateEntities != null) {
+            certificateMap = certificateEntities.stream().collect(Collectors.toMap(Certificate::getId, c -> c));
+        } else {
+            certificateMap = Map.of();
+        }
 
-        //  cancel 제거
-        cancelMap.keySet().forEach(certificateIds::remove);
-
-        // 직접 즐겨찾기한 certificate 포함
-        certificateIds.addAll(certMap.keySet());
-
-        List<UserFavoriteDTO> result = new ArrayList<>();
-
-        // 학과 즐겨찾기 DTO
-
-        deptMapRepository.findAllByIdIn(deptMap.keySet()).forEach(dm -> {
-            UserFavoriteDTO dto = new UserFavoriteDTO();
-            dto.setType("department");
-            dto.setType_id(dm.getId());
-
-            String facultyName = dm.getFaculty() != null ? dm.getFaculty().getFacultyName() : null;
-            String deptName = dm.getDepartment() != null ? dm.getDepartment().getDepartmentName() : null;
-            String majorName = dm.getMajor() != null ? dm.getMajor().getMajorName() : null;
-            dto.setName(majorName != null ? majorName :
-                    deptName != null ? deptName : facultyName);
-
-            result.add(dto);
-        });
-
-        // 자격증 DTO
-        certificateRepository.findAllById(certificateIds).forEach(cert -> {
-            UserFavoriteDTO dto = new UserFavoriteDTO();
-            dto.setType("certificate");
-            dto.setType_id(cert.getId());
-            dto.setName(cert.getCertificateName());
-            result.add(dto);
-        });
-
-        return result;
+        return userFavoriteMapper.toUserFavoriteDTOList(userFavoriteMapMap, deptMapMap, certificateMap);
     }
 
 
@@ -164,6 +144,10 @@ public class UserFavoriteService {
 
         User userEntity = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+
+        //중복값 존재시 return
+        if (userFavoriteRepository.existsByUser_IdAndTypeAndTypeId(userId, __type.toString(), __typeId))
+            return;
 
         //자격증일 경우 cancel 타입이 있는지 확인
         if (__type == FavoriteType.certificate) {
