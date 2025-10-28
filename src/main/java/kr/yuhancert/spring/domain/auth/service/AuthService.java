@@ -37,7 +37,7 @@ public class AuthService {
     }
 
     // 소셜 로그인(구글,카카오..) 처리 로직
-    public SocialUserResponseDTO doSocialLogin(SocialLoginRequestDTO request) {
+    public ResponseEntity<?> doSocialLogin(SocialLoginRequestDTO request, HttpServletResponse response) {
         // 소셜 타입을 읽어서 어떤 서비스를 적용할건지 정함.
         SocialLoginService loginService = this.getLoginService(request.getSocialType());
         // 위에서 적용된 서비스를 기반으로 액세스 토큰을 받아옴.
@@ -47,6 +47,7 @@ public class AuthService {
         log.info("socialUserResponse {} ", socialUserResponseDTO.toString());
 
         Optional<User> checkUser = userRepository.findByUserEmail(socialUserResponseDTO.getEmail());
+        checkUser.ifPresent(user -> {socialUserResponseDTO.setId(user.getId());});
 
         if(checkUser.isPresent()) {
             if(checkUser.get().getSocialType() != socialUserResponseDTO.getSocialType()) {throw new IllegalStateException("이미 가입된  소셜 사용자입니다.");}
@@ -63,7 +64,14 @@ public class AuthService {
                 );
         }
 
-        return socialUserResponseDTO;
+        Map<String, String> token = Jwt_Token_Create(socialUserResponseDTO.getId(),
+                socialUserResponseDTO.getName(),
+                socialUserResponseDTO.getEmail(),
+                socialUserResponseDTO.getSocialType(),
+                socialUserResponseDTO.getRole(),
+                response);
+
+        return ResponseEntity.ok(token);
     }
 
 
@@ -127,6 +135,15 @@ public class AuthService {
 
     //리프레시 토큰 삭제 ( 그냥 토큰 만료시간 0으로 만드는거임 )
     public ResponseEntity<?> logout(HttpServletResponse response) {
+        ResponseCookie cookie_s = ResponseCookie.from("access_token", "")
+                .httpOnly(true)
+                .secure(false)                      // true - https 환경만 전송 / false - http도 전달 가능
+                .sameSite("Lax")                // 또는 cross-site 필요시 "None"
+                .path("/")                      // 모든 경로에 쿠키 전송 가능
+                .maxAge(0)  // 초 단위
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie_s.toString());
+
         ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
                 .secure(false)                      // true - https 환경만 전송 / false - http도 전달 가능
@@ -148,6 +165,17 @@ public class AuthService {
         // jwt 액세스,리프레시 토큰 생성
         String accessToken = jwtService.createAccessToken(id, name, email, socialType, role);
         String refreshToken = jwtService.createRefreshToken(email);
+
+        // 액세스 토큰 쿠키로 변환
+        // 월래 쿠키 변환 안 해도 상관없어서 안 만들었는데(parse기능 사용 안함) favorite 로직이 액세스 토큰이 쿠키에 저장되어야 해서 액세스도 쿠키로 저장함.
+        ResponseCookie cookie_s = ResponseCookie.from("access_token", accessToken)
+                .httpOnly(true)
+                .secure(false)                      // true - https 환경만 전송 / false - http도 전달 가능
+                .sameSite("Lax")                // 또는 cross-site 필요시 "None"
+                .path("/")                      // 모든 경로에 쿠키 전송 가능
+                .maxAge(jwtService.get_accessExp()/1000)  // 초 단위
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie_s.toString());
 
         // 리프레시 토큰 쿠키로 변환
         ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)

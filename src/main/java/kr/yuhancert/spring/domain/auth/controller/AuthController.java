@@ -30,11 +30,7 @@ public class AuthController {
     @PostMapping("/social_login")
     public ResponseEntity<?> doSocialLogin(@RequestBody @Valid SocialLoginRequestDTO request, HttpServletResponse response) {
         try {
-            SocialUserResponseDTO user = authService.doSocialLogin(request);
-
-            return ResponseEntity.ok(
-                    authService.Jwt_Token_Create(user.getId(), user.getName(), user.getEmail(), user.getSocialType(), user.getRole(), response)
-            );
+                return authService.doSocialLogin(request,response);
         }
         catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
