@@ -1,6 +1,6 @@
 package kr.yuhancert.spring.infra.login.api.google;
 
-import kr.yuhancert.spring.domain.login.dto.GoogleRequestAccessTokenDTO;
+import kr.yuhancert.spring.domain.auth.dto.GoogleRequestAccessTokenDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

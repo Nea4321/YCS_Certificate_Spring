@@ -1,6 +1,6 @@
 package kr.yuhancert.spring.infra.login.api.naver;
 
-import kr.yuhancert.spring.domain.login.dto.NaverRequestAccessTokenDTO;
+import kr.yuhancert.spring.domain.auth.dto.NaverRequestAccessTokenDTO;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
