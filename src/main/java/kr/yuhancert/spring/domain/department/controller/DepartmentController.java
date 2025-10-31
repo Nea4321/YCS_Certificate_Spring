@@ -1,6 +1,7 @@
 package kr.yuhancert.spring.domain.department.controller;
 
 import ch.qos.logback.classic.Logger;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import kr.yuhancert.spring.domain.certificate.dto.ScheduleDTO;
 import kr.yuhancert.spring.domain.department.dto.*;
@@ -145,21 +146,21 @@ public class DepartmentController {
     }
 
     @PostMapping("/edit")
-    public ResponseEntity<?> changeFacultyDepartMajor(@RequestBody DeptEditRequestDTO request) {
-        try {return departmentService.updateFacultyDepartmentMajor(request);}
+    public ResponseEntity<?> changeFacultyDepartMajor(@RequestBody DeptEditRequestDTO request, HttpServletRequest cookie) {
+        try {return departmentService.updateFacultyDepartmentMajor(request, cookie);}
         catch (Exception e) { return ResponseEntity.badRequest().body("수정 실패: " + e.getMessage());}
     }
 
 
 
     @PostMapping("/delete")
-    public ResponseEntity<?> deleteFaDeMa(@RequestBody @Valid DeptEditRequestDTO request) {
-        return departmentService.deleteFacultyDepartmentMajor(request);
+    public ResponseEntity<?> deleteFaDeMa(@RequestBody @Valid DeptEditRequestDTO request, HttpServletRequest cookie) {
+        return departmentService.deleteFacultyDepartmentMajor(request, cookie);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> setFacultyDepartMajor(@RequestBody @Valid FacultyCreateRequestDTO request) {
-        return departmentService.setFacultyDepartmentMajor(request);
+    public ResponseEntity<?> setFacultyDepartMajor(@RequestBody @Valid FacultyCreateRequestDTO request, HttpServletRequest cookie) {
+        return departmentService.setFacultyDepartmentMajor(request, cookie);
     }
 
 }
