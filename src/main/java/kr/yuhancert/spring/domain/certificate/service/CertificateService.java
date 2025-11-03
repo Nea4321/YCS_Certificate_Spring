@@ -2,14 +2,10 @@ package kr.yuhancert.spring.domain.certificate.service;
 
 import kr.yuhancert.spring.domain.certificate.dto.*;
 import kr.yuhancert.spring.domain.certificate.entity.*;
-import kr.yuhancert.spring.domain.certificate.mapper.CertDataMapper;
-import kr.yuhancert.spring.domain.certificate.mapper.CertificateMapper;
-import kr.yuhancert.spring.domain.certificate.mapper.OrganizationMapper;
-import kr.yuhancert.spring.domain.certificate.mapper.TagMapper;
+import kr.yuhancert.spring.domain.certificate.mapper.*;
 import kr.yuhancert.spring.domain.certificate.repository.*;
 import kr.yuhancert.spring.global.cache.service.CacheService;
 import kr.yuhancert.spring.global.cache.util.CacheList;
-import kr.yuhancert.spring.infra.config.CertConfig;
 import kr.yuhancert.spring.infra.config.CertConfigRegistry;
 import kr.yuhancert.spring.infra.crawling.engine.EngineRunner;
 import kr.yuhancert.spring.infra.crawling.manager.CertificateExecutor;
@@ -21,6 +17,8 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,6 +32,8 @@ public class CertificateService {
     private final TagRepository tagRepository;
     private final TagMapRepository tagMapRepository;
     private final OrganizationRepository organizationRepository;
+    private final NationalCertDateRepository nationalCertDateRepository;
+
     private final CertificateMapper certificateMapper;
     private final CertDataMapper certDataMapper;
     private final TagMapper tagMapper;
@@ -47,6 +47,7 @@ public class CertificateService {
     private final EngineRunner engineRunner;
     private final JsonCertificateParser parser;
     private final CertificateExecutor executor;
+    private final NationalCertDateMapper nationalCertDateMapper;
 
     @Value("${public.script:../Engine/public_cert_api/run_public.py}")
     private String publicScript;
@@ -73,7 +74,9 @@ public class CertificateService {
             CertConfigRegistry certConfigRegistry,
             EngineRunner engineRunner,
             JsonCertificateParser parser,
-            CertificateExecutor executor
+            CertificateExecutor executor,
+            NationalCertDateRepository nationalCertDateRepository,
+            NationalCertDateMapper nationalCertDateMapper
     ) {
         this.cacheService = __cacheService;
         this.certificateRepository = __certificateRepository;
@@ -89,6 +92,8 @@ public class CertificateService {
         this.engineRunner = engineRunner;
         this.parser = parser;
         this.executor = executor;
+        this.nationalCertDateRepository = nationalCertDateRepository;
+        this.nationalCertDateMapper = nationalCertDateMapper;
     }
 
 //    private void checkCertEntities() {
@@ -170,6 +175,11 @@ public class CertificateService {
         cacheService.put(CacheList.TAG_CACHE.getName(), CacheList.TAG_CACHE, tagDTOList);
 
         return tagDTOList;
+    }
+
+    public List<NationalCertDateDTO> getNationalSchedule() {
+        List<NationalCertDate> allEntities = nationalCertDateRepository.findAll();
+        return nationalCertDateMapper.toScheduleDTOList(allEntities);
     }
 
     public List<OrganizationDTO> getOrganizationList() {

@@ -21,6 +21,7 @@ public class CacheList {
     public static final CertCache CERT_DATA_CACHE = CertCache.of("certDataCache", 1, 12, 300);
     public static final CertCache TAG_CACHE = CertCache.of("tagCache", 1, 24, 100);
     public static final CertCache ORG_CACHE = CertCache.of("orgCache", 1, 24, 100);
+    public static final CertCache NAT_CACHE = CertCache.of("natCache", 1, 24, 100);
 
 
     /// 모든 캐시 목록
