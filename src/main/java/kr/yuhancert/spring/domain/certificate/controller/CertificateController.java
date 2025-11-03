@@ -126,6 +126,7 @@ public class CertificateController {
     // kr/yuhancert/spring/domain/certificate/controller/CertificateController.java
 
     // ✅ 1. 전체: 파이썬 실행 + JSON 저장 한꺼번에
+    // ✅ 1. 전체: 파이썬 실행 + JSON 저장 한꺼번에
     //1번째: 내가 손 댄 곳 -> 파이썬 실행하고 json 저장까지 다 하는 친구
     @PostMapping("/run-public/{certId}")
     public ResponseEntity<String> runPublic(@PathVariable Long certId) throws Exception {

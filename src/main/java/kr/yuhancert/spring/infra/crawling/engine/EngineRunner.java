@@ -52,7 +52,7 @@ public class EngineRunner {
         if (jsonPath == null || jsonPath.isBlank())
             throw new IllegalArgumentException("jsonPath 가 비어있습니다.");
 
-        Files.createDirectories(Path.of(jsonPath).getParent());
+        Files.createDirectories(Path.of(jsonPath));
 
         // 1) 스크립트 절대경로 계산
         Path scriptAbs = Path.of(scriptPath);

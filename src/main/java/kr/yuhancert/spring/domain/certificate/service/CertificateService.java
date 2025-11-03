@@ -105,10 +105,10 @@ public class CertificateService {
 //            tagMapEntities = tagMapRepository.findAll();
 //        }
 //
-////        if (certDataEntities == null || certDataEntities.isEmpty()) {
-////            certDataEntities = certDataRepository.findAll().stream()
-////                    .collect(Collectors.toMap(CertData::getId, Function.identity()));
-////        }
+    ////        if (certDataEntities == null || certDataEntities.isEmpty()) {
+    ////            certDataEntities = certDataRepository.findAll().stream()
+    ////                    .collect(Collectors.toMap(CertData::getId, Function.identity()));
+    ////        }
 //
 //    }
 
@@ -129,9 +129,9 @@ public class CertificateService {
 
         Map<Long, List<Long>> tagMapMap = tagMapEntities.stream()
                 .collect(Collectors.groupingBy(
-                tm -> tm.getCertificate().getId(),
-                Collectors.mapping(tm -> tm.getTag().getId(), Collectors.toList())
-        ));
+                        tm -> tm.getCertificate().getId(),
+                        Collectors.mapping(tm -> tm.getTag().getId(), Collectors.toList())
+                ));
 
         List<CertificateDTO> certificateDTO = certificateMapper.toCertificateDTOList(certificateEntities,  tagMapMap);
 
@@ -238,7 +238,5 @@ public class CertificateService {
         // 5) JSON → DB 저장
         parser.parseAndSave(finalJson.toString(), certId);
     }
-
-
 
 }
