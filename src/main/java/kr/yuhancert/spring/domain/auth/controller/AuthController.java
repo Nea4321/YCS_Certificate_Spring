@@ -5,9 +5,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import kr.yuhancert.spring.domain.auth.dto.LoginResponseDTO;
 import kr.yuhancert.spring.domain.auth.dto.SocialLoginRequestDTO;
-import kr.yuhancert.spring.domain.auth.dto.SocialUserResponseDTO;
 import kr.yuhancert.spring.domain.auth.dto.UserResponseDTO;
 import kr.yuhancert.spring.domain.auth.service.AuthService;
+import kr.yuhancert.spring.domain.auth.service.EmailService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,8 +17,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthController {
     private final AuthService authService;
+    private final EmailService emailService;
 
-    public AuthController(AuthService authService) {this.authService = authService;}
+    public AuthController(AuthService authService, EmailService emailService) {this.authService = authService; this.emailService = emailService;}
 
     /**
      * 소셜 로그인 처리해서 jwt 토큰 넘겨줌
@@ -58,5 +60,19 @@ public class AuthController {
     public ResponseEntity<?> RefreshTokenDelete(HttpServletResponse request) {
         return authService.logout(request);
     }
+
+    @PostMapping("/send-email")
+    public ResponseEntity<String> sendEmail(@RequestParam String email) {
+        emailService.sendVerificationCode(email); // 메일 전송
+        return ResponseEntity.ok("인증 코드가 발송되었습니다.");
+    }
+
+    //이메일 인증 코드 확인
+    @PostMapping("/verify-code")
+    public ResponseEntity<String> verifyCode(@RequestParam String email, @RequestParam String code) {
+        boolean valid = emailService.verifyCode(email, code); // 코드 검증
+        if (valid) return ResponseEntity.ok("인증 성공");
+        else return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증 실패 또는 만료됨"); // 실패 시 401
+        }
 
 }
