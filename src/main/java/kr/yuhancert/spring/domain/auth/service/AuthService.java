@@ -184,6 +184,34 @@ public class AuthService {
         return ResponseEntity.ok("리프레시 토큰 삭제 완료");
     }
 
+    //회원 이름 수정
+    public ResponseEntity<?> updateName(String name, HttpServletRequest request){
+        try {
+            Claims claims = jwtService.parseClaims(request);
+            Object idObj = claims.get("id");
+            Long userId = ((Number) idObj).longValue();
+
+            //  유저 데이터 조회
+            UserData userData = userDataRepository.findByUserId(userId);
+            if (userData == null) {
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body("사용자 정보를 찾을 수 없습니다.");
+            }
+
+            // 이름 수정 및 저장
+            userData.setUserName(name);
+            userDataRepository.save(userData);
+
+            return ResponseEntity.ok("이름이 성공적으로 변경되었습니다.");
+
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("이름 변경 중 오류가 발생했습니다.");
+        }
+    }
+
     // 회원 삭제 처리 관련 로직
     public void DeleteUser(){}
 

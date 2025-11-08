@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -59,6 +61,12 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> RefreshTokenDelete(HttpServletResponse request) {
         return authService.logout(request);
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<?> updateName(@RequestBody Map<String, String> requestBody, HttpServletRequest request) {
+        String name = requestBody.get("name");
+        return authService.updateName(name, request);
     }
 
     @PostMapping("/send-email")
