@@ -3,10 +3,7 @@ package kr.yuhancert.spring.domain.user.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import kr.yuhancert.spring.domain.auth.entity.User;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -19,21 +16,25 @@ import java.time.OffsetDateTime;
 @Table(name = "user_data")
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UserData {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id", nullable = false)
     private Long id;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @NotNull
-    @ColumnDefault("now()")
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE DEFAULT now()")
     private OffsetDateTime createdAt;
+
+    @NotNull
+    @Column(name = "user_name", nullable = false)
+    private String userName;
 
 }

@@ -10,6 +10,8 @@ import kr.yuhancert.spring.domain.auth.dto.*;
 import kr.yuhancert.spring.domain.auth.entity.User;
 import kr.yuhancert.spring.domain.auth.entity.SocialType;
 import kr.yuhancert.spring.domain.auth.repository.UserRepository;
+import kr.yuhancert.spring.domain.user.entity.UserData;
+import kr.yuhancert.spring.domain.user.repository.UserDataRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,9 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,14 +31,17 @@ import java.util.Optional;
 public class AuthService {
     private final List<SocialLoginService> loginServices;
     private final UserRepository userRepository;
+    private final UserDataRepository userDataRepository ;
     private final JwtService jwtService;
     private final JwtKeyService jwtKeyService;
 
-    public AuthService(UserRepository userRepository, JwtService jwtService, JwtKeyService jwtKeyService, List<SocialLoginService> loginServices) {
+    public AuthService(UserRepository userRepository, JwtService jwtService, JwtKeyService jwtKeyService, List<SocialLoginService> loginServices
+                        , UserDataRepository userDataRepository) {
         this.loginServices = loginServices;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.jwtKeyService = jwtKeyService;
+        this.userDataRepository = userDataRepository;
     }
 
     // 소셜 로그인(구글,카카오..) 처리 로직
@@ -53,15 +61,21 @@ public class AuthService {
             if(checkUser.get().getSocialType() != socialUserResponseDTO.getSocialType()) {throw new IllegalStateException("이미 가입된  소셜 사용자입니다.");}
         }
         else{
-            userRepository.save(
-                    User.builder()
-                            .id(socialUserResponseDTO.getId())
-                            .userEmail(socialUserResponseDTO.getEmail())
-                            .userName(socialUserResponseDTO.getName())
-                            .socialType(socialUserResponseDTO.getSocialType())
-                            .userRole("normal")
-                            .build()
-                );
+            UserData userData = UserData.builder()
+                    .userName(socialUserResponseDTO.getName())
+                    .createdAt(OffsetDateTime.now(ZoneOffset.UTC))
+                    .build();
+
+            User user = User.builder()
+                    .userEmail(socialUserResponseDTO.getEmail())
+                    .socialType(socialUserResponseDTO.getSocialType())
+                    .userRole("normal")
+                    .userData(userData)
+                    .build();
+
+            userData.setUser(user);
+
+            userRepository.save(user); // User + UserData 동시에 저장
         }
 
         Map<String, String> token = Jwt_Token_Create(socialUserResponseDTO.getId(),
@@ -91,6 +105,7 @@ public class AuthService {
         }
         // 로그인한 유저 정보를 DB에서 불러옴.
         User user = userOpt.get();
+        UserData userData =  userDataRepository.findByUserId(userOpt.get().getId());
 
         if (user.getSocialType() != SocialType.NORMAL) {
             return ResponseEntity
@@ -105,7 +120,7 @@ public class AuthService {
         }
 
         // 유저 정보를 DB에서 가져온 후 jwt토큰 으로 저장함.
-        Map<String, String> token = Jwt_Token_Create(user.getId(),user.getUserName(),user.getUserEmail(),user.getSocialType(),user.getUserRole(),response);
+        Map<String, String> token = Jwt_Token_Create(user.getId(),userData.getUserName(),user.getUserEmail(),user.getSocialType(),user.getUserRole(),response);
         return ResponseEntity.ok(token);
 
 
@@ -113,24 +128,37 @@ public class AuthService {
 
     // 회원가입 처리 관련 로직
     public ResponseEntity<?> doSingUp(UserResponseDTO userResponseDTO) {
+
         if (userRepository.findByUserEmail((userResponseDTO.getUserEmail())).isPresent()) {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT) // 409 - 리소스 충돌 (db 중복 데이터)
                     .body("이미 가입된 이메일 입니다.");
         }
        else {
-            User user = userRepository.save(
-                    User.builder()
-                            .id(userResponseDTO.getUserId())
-                            .userEmail(userResponseDTO.getUserEmail())
-                            .userName(userResponseDTO.getUserName())
-                            .userPassword(userResponseDTO.getUserPassword())
-                            .socialType(userResponseDTO.getSocialType())
-                            .userRole("normal")
-                            .build()
-            );
+            UserData userData = UserData.builder()
+                    .userName(userResponseDTO.getUserName())
+                    .createdAt(OffsetDateTime.now(ZoneOffset.UTC))
+                    .build();
+
+            User user = User.builder()
+                    .userEmail(userResponseDTO.getUserEmail())
+                    .userPassword(userResponseDTO.getUserPassword())
+                    .socialType(SocialType.NORMAL)
+                    .userRole("normal")
+                    .userData(userData)
+                    .build();
+
+            userData.setUser(user);
+
+            userRepository.save(user); // User + UserData 동시에 저장
+
+
             return ResponseEntity.status(HttpStatus.OK).body("회원 등록 되었습니다.");
         }
+
+
+
+
     }
 
     //리프레시 토큰 삭제 ( 그냥 토큰 만료시간 0으로 만드는거임 )
@@ -154,6 +182,34 @@ public class AuthService {
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return ResponseEntity.ok("리프레시 토큰 삭제 완료");
+    }
+
+    //회원 이름 수정
+    public ResponseEntity<?> updateName(String name, HttpServletRequest request){
+        try {
+            Claims claims = jwtService.parseClaims(request);
+            Object idObj = claims.get("id");
+            Long userId = ((Number) idObj).longValue();
+
+            //  유저 데이터 조회
+            UserData userData = userDataRepository.findByUserId(userId);
+            if (userData == null) {
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body("사용자 정보를 찾을 수 없습니다.");
+            }
+
+            // 이름 수정 및 저장
+            userData.setUserName(name);
+            userDataRepository.save(userData);
+
+            return ResponseEntity.ok("이름이 성공적으로 변경되었습니다.");
+
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("이름 변경 중 오류가 발생했습니다.");
+        }
     }
 
     // 회원 삭제 처리 관련 로직
@@ -214,9 +270,10 @@ public class AuthService {
 
                         User user = userRepository.findByUserEmail(email)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
+                        UserData userData =  userDataRepository.findByUserId(user.getId());
 
                         Long id = user.getId();
-                        String name = user.getUserName();
+                        String name = userData.getUserName();
                         SocialType socialType = user.getSocialType();
                         String role = user.getUserRole();
                         String accessToken = jwtService.createAccessToken(id, name, email, socialType, role);

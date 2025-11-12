@@ -1,6 +1,7 @@
 package kr.yuhancert.spring.domain.auth.entity;
 
 import jakarta.persistence.*;
+import kr.yuhancert.spring.domain.user.entity.UserData;
 import lombok.*;
 
 @Entity
@@ -24,12 +25,12 @@ public class User {
     @Column(name = "social_type", nullable = false)
     private SocialType socialType;
 
-    @Column(name = "user_name", nullable = false)
-    private String userName;
-
     @Column(name = "user_password")
     private String userPassword;
 
     @Column(name = "user_role", nullable = false)
     private String userRole = "normal";
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private UserData userData;
 }

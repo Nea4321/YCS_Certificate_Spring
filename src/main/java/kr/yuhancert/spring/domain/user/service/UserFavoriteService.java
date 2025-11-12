@@ -151,6 +151,7 @@ public class UserFavoriteService {
     public void addUserFavorite(HttpServletRequest request, FavoriteType __type, Long __typeId) {
 
         Claims claims = jwtService.parseClaims(request);
+
         Object idObj = claims.get("id");
         Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
 
@@ -194,6 +195,7 @@ public class UserFavoriteService {
     public void deleteUserFavorite(HttpServletRequest request, FavoriteType __type,Long __typeId) {
 
         Claims claims = jwtService.parseClaims(request);
+
         Object idObj = claims.get("id");
         Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
 

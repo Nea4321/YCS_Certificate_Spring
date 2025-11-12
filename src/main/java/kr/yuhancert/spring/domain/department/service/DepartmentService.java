@@ -1,5 +1,8 @@
 package kr.yuhancert.spring.domain.department.service;
 
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
+import kr.yuhancert.spring.domain.auth.service.JwtService;
 import kr.yuhancert.spring.domain.certificate.dto.ScheduleDTO;
 import kr.yuhancert.spring.domain.certificate.service.CertificateService;
 import kr.yuhancert.spring.domain.department.dto.*;
@@ -43,6 +46,7 @@ public class DepartmentService {
     private final DeptListMapper deptListMapper;
     private final FacultyDepartmentMapper facultyDepartmentMapper;
     private final DeptMapDataMapper deptMapDataMapper;
+    private final JwtService jwtService;
     Logger logger = LoggerFactory.getLogger(DepartmentService.class);
 
 
@@ -57,7 +61,9 @@ public class DepartmentService {
                              DeptMapMapper __deptMapMapper,
                              DeptListMapper __deptListMapper,
                              FacultyDepartmentMapper __facultyDepartmentMapper,
-                             DeptMapDataMapper __deptMapDataMapper) {
+                             DeptMapDataMapper __deptMapDataMapper,
+                             JwtService __jwtService
+                             ) {
 
         this.cacheService = __cacheService;
         this.certificateService = __certificateService;
@@ -71,6 +77,7 @@ public class DepartmentService {
         this.deptListMapper = __deptListMapper;
         this.facultyDepartmentMapper = __facultyDepartmentMapper;
         this.deptMapDataMapper = __deptMapDataMapper;
+        this.jwtService = __jwtService;
     }
 
 
@@ -216,7 +223,10 @@ public class DepartmentService {
      * 2-5 결론 요약 : 해결 할 수 있을거 같은데 로직이 너무 복잡해 질거 같아서 보류중
      * 2-6. 갑자기 든 생각 : 그냥 major 제약조건만 풀면 정상화 될지도?
      * */
-    public ResponseEntity<?> deleteFacultyDepartmentMajor(DeptEditRequestDTO deptEditRequestDTO){
+    public ResponseEntity<?> deleteFacultyDepartmentMajor(DeptEditRequestDTO deptEditRequestDTO, HttpServletRequest request){
+        Claims claims = jwtService.parseClaims(request);
+        if (!"admin".equals(claims.get("role"))) {throw new RuntimeException("관리자 게정이 아닙니다.");}
+
         String type = deptEditRequestDTO.getType();
         Long id = deptEditRequestDTO.getId();
 
@@ -288,7 +298,10 @@ public class DepartmentService {
 
     /** 학부,학과,전공 이름 수정 */
     @Transactional
-    public ResponseEntity<?> updateFacultyDepartmentMajor(DeptEditRequestDTO deptEditRequestDTO) {
+    public ResponseEntity<?> updateFacultyDepartmentMajor(DeptEditRequestDTO deptEditRequestDTO, HttpServletRequest request) {
+        Claims claims = jwtService.parseClaims(request);
+        if (!"admin".equals(claims.get("role"))) {throw new RuntimeException("관리자 게정이 아닙니다.");}
+
         String type = deptEditRequestDTO.getType();
         Long id = deptEditRequestDTO.getId();
         String newName = deptEditRequestDTO.getValue();
@@ -395,7 +408,10 @@ public class DepartmentService {
      * 추가된 학부,학과,전공 db에 저장
      * */
     @Transactional
-    public ResponseEntity<?> setFacultyDepartmentMajor(FacultyCreateRequestDTO facultyCreateRequestDTO) {
+    public ResponseEntity<?> setFacultyDepartmentMajor(FacultyCreateRequestDTO facultyCreateRequestDTO, HttpServletRequest request) {
+        Claims claims = jwtService.parseClaims(request);
+        if (!"admin".equals(claims.get("role"))) {throw new RuntimeException("관리자 게정이 아닙니다.");}
+
         logger.info("facultyCreateRequestDTO: " + facultyCreateRequestDTO);
         String facultyName_create = facultyCreateRequestDTO.getFacultyName();
 

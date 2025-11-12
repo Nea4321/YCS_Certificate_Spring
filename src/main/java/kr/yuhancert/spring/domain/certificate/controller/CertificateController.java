@@ -2,10 +2,7 @@ package kr.yuhancert.spring.domain.certificate.controller;
 import ch.qos.logback.classic.Logger;
 import kr.yuhancert.spring.domain.certificate.dto.*;
 import kr.yuhancert.spring.domain.certificate.service.CertificateService;
-import kr.yuhancert.spring.domain.certificate.service.JsonCertificateParser;
-import kr.yuhancert.spring.infra.crawling.engine.EngineRunner;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -70,6 +67,24 @@ public class CertificateController {
             return ResponseEntity.ok(organizationDTO);
         } catch (Exception e) {
             logger.error("Error getting organization list", e);
+            errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
+    @GetMapping(value = "/national")
+    public ResponseEntity<?> getNationalSchedule() {
+        try{
+            List<NationalCertDateDTO> nationalDTO = certificateService.getNationalSchedule();
+            return ResponseEntity.ok(nationalDTO);
+        }catch (Exception e) {
+            logger.error("Error getting national_cert_date list", e);
             errorResponse = new HashMap<>();
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());
