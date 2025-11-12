@@ -19,7 +19,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +52,22 @@ public class JsonCertificateParser {
      * - _meta.name / _meta.jmcd / _meta.cert_id 주입/보강
      * - 기존 행이 있으면 update, 없으면 insert
      */
+
+    private Map<String,Object> asMap(JsonNode n) {
+        return (n == null || n.isNull() || n.isMissingNode())
+                ? null
+                : objectMapper.convertValue(n, new TypeReference<Map<String,Object>>(){});
+    }
+    private List<Map<String,Object>> asListOfMap(JsonNode n) {
+        return (n == null || n.isNull() || n.isMissingNode())
+                ? null
+                : objectMapper.convertValue(n, new TypeReference<List<Map<String,Object>>>(){});
+    }
+
+    private boolean has(JsonNode n) {
+        return n != null && !n.isNull() && !n.isMissingNode();
+    }
+
     @Transactional
     public void parseAndSave(String jsonPath, Long certId) throws IOException {
         if (certId == null) throw new IllegalArgumentException("certId가 null 입니다.");
@@ -56,43 +75,55 @@ public class JsonCertificateParser {
         Path p = Path.of(jsonPath);
         if (Files.notExists(p)) throw new FileNotFoundException("JSON 파일 없음: " + jsonPath);
 
-        // 1) JSON 읽기 (파일 핸들 잠김 회피)
+        // 1) JSON 로드
         byte[] bytes = Files.readAllBytes(p);
         JsonNode root = objectMapper.readTree(bytes);
 
-        // 1-1) 최상위가 객체가 아닐 수도 있으니 ObjectNode로 확보
-        final ObjectNode obj;
-        if (root instanceof ObjectNode) {
-            obj = (ObjectNode) root;
-        } else {
-            obj = objectMapper.createObjectNode();
-            obj.set("data", root);
-        }
+        final ObjectNode obj = (root instanceof ObjectNode)
+                ? (ObjectNode) root
+                : objectMapper.createObjectNode().set("data", root);
 
-        // 2) 인증서 정보
+        // 2) 인증서(외래키/공유PK 주인)
         Certificate cert = certificateRepository.findById(certId)
                 .orElseThrow(() -> new IllegalArgumentException("no certificate: " + certId));
 
-        String certName = Optional.ofNullable(cert.getCertificateName()).orElse("");
+        // 3) _meta 보강
+        ObjectNode meta = obj.with("_meta");
+        meta.put("name", Optional.ofNullable(cert.getCertificateName()).orElse(""));
         String jmcd = Optional.ofNullable(cert.getJmcd()).orElse("");
-
-        // 3) _meta 보강/주입
-        ObjectNode meta = obj.with("_meta");  // 없으면 생성
-        meta.put("name", certName);
         if (!jmcd.isBlank()) meta.put("jmcd", jmcd);
         meta.put("cert_id", certId);
 
-        // 4) 업서트
-        CertData entity = certDataRepository.findById(certId).orElse(null);
-        if (entity == null) {
-            entity = new CertData();
-            entity.setId(certId); // 공유 PK 구조
-            entity.setCertificate(em.getReference(Certificate.class, certId));
-        }
-//        entity.setInfogb("공공 자격증");
-//        entity.setContents(obj.toString());
+        // 4) 업서트 (비관적 락으로 동시 저장 방지 권장)
+        CertData entity = certDataRepository.findByIdForUpdate(certId) // @Lock(PESSIMISTIC_WRITE)
+                .orElseGet(() -> {
+                    CertData x = new CertData();
+                    // 공유 PK(@MapsId)라면 setId() 대신 setCertificate()만!
+                    x.setCertificate(cert);
+                    return x;
+                });
+
+        entity.setCertificateName(cert.getCertificateName());
+        entity.setOrganization(cert.getOrganization());
+        entity.setBasicInfo(asMap(obj.get("기본정보")));
+        entity.setSchedule(asListOfMap(obj.get("시험일정"))); // 배열 형태 유지
+
+        // ---- other_info 조립 ----
+        var otherObj = objectMapper.createObjectNode();
+        if (has(obj.get("우대현황")))           otherObj.set("우대현황", obj.get("우대현황"));
+        if (has(obj.get("링크")))               otherObj.set("링크", obj.get("링크"));
+        if (has(obj.get("종목별검정현황")))     otherObj.set("종목별검정현황", obj.get("종목별검정현황"));
+        if (has(obj.get("시험정보")))           otherObj.set("시험정보", obj.get("시험정보"));   // ⬅️ 추가
+        if (has(obj.get("기타정보")))           otherObj.set("기타정보", obj.get("기타정보")); // 호환용
+
+        entity.setOtherInfo(asMap(otherObj));   // ← Map<String,Object>로 변환되어 저장
 
         certDataRepository.save(entity);
     }
+
+    private static String toJsonOrNull(JsonNode n) {
+        return (n == null || n.isMissingNode() || n.isNull()) ? null : n.toString();
+    }
+
 
 }
