@@ -40,50 +40,74 @@ public class NaverLoginService implements SocialLoginService{
     /// 구글 서버 에서 엑세스 토큰을 받아오는 메서드
     @Override
     public SocialTokenDTO getAccessToken(String authorizationCode) {
-        ResponseEntity<?> response = naverGetToken.getAccessToken(
-                NaverRequestAccessTokenDTO.builder()
-                        .code(authorizationCode)
-                        .client_id(naverAppKey)
-                        .clientSecret(naverAppSecret)
-                        .grant_type(naverGrantType)
-                        .state("state")
-                        .build()
-        );
-        log.info("naver access info");
-        log.info(response.toString());
+        try {
+            ResponseEntity<?> response = naverGetToken.getAccessToken(
+                    NaverRequestAccessTokenDTO.builder()
+                            .code(authorizationCode)
+                            .client_id(naverAppKey)
+                            .clientSecret(naverAppSecret)
+                            .grant_type(naverGrantType)
+                            .state("state")
+                            .build()
+            );
 
-        return new Gson()
-                .fromJson(
-                        response.getBody().toString(),
-                        SocialTokenDTO.class
-                );
+            if (response.getStatusCode().isError() || response.getBody() == null) {
+                throw new IllegalStateException("네이버 액세스 토큰 요청 실패: " + response.getStatusCode());
+            }
+
+            log.info("naver access info: {}", response);
+
+            return new Gson().fromJson(
+                    response.getBody().toString(),
+                    SocialTokenDTO.class
+            );
+
+        } catch (Exception e) {
+            log.error("네이버 토큰 요청 중 오류 발생", e);
+            throw new RuntimeException("네이버 로그인 중 오류가 발생했습니다. (" + e.getMessage() + ")");
+        }
     }
 
     @Override
     public SocialUserResponseDTO getUserInfo(String accessToken) {
-        ResponseEntity<?> response = naverGetUser.getUserInfo(accessToken);
+        try {
+            ResponseEntity<?> response = naverGetUser.getUserInfo(accessToken);
 
-        log.info("naver user response");
-        log.info(response.toString());
+            if (response.getStatusCode().isError() || response.getBody() == null) {
+                throw new IllegalStateException("네이버 사용자 정보 요청 실패: " + response.getStatusCode());
+            }
 
+            log.info("naver user response: {}", response);
 
-        String jsonString = response.getBody().toString();
+            String jsonString = response.getBody().toString();
 
-        Gson gson = new GsonBuilder()
-                .setPrettyPrinting()  //Json 출력 보기 이쁘게 해주는거
-                .registerTypeAdapter(LocalDateTime.class, new GsonLocalDateTimeAdapter()) //LocalDateTime 가능하게
-                .create(); //gson 생성 -> 이 gson은 위 설정으로 재탄생함.
+            Gson gson = new GsonBuilder()
+                    .setPrettyPrinting()
+                    .registerTypeAdapter(LocalDateTime.class, new GsonLocalDateTimeAdapter())
+                    .create();
 
-        NaveResponseUserDTO naverLoginResponse = gson.fromJson(jsonString, NaveResponseUserDTO.class);
+            NaveResponseUserDTO naverLoginResponse = gson.fromJson(jsonString, NaveResponseUserDTO.class);
 
-        NaveResponseUserDTO.NaverResponse res = naverLoginResponse.getResponse();
+            if (naverLoginResponse == null || naverLoginResponse.getResponse() == null) {
+                throw new IllegalStateException("네이버 사용자 정보 파싱 실패");
+            }
 
-        return SocialUserResponseDTO.builder()
-                .name(res.getName())
-                .email(res.getEmail())
-                .socialType(SocialType.NAVER)
-                .role("normal")
-                .build();
+            NaveResponseUserDTO.NaverResponse res = naverLoginResponse.getResponse();
+
+            if (res.getEmail() == null || res.getName() == null) {
+                throw new IllegalStateException("네이버 사용자 정보에 이메일 또는 이름이 없습니다.");
+            }
+
+            return SocialUserResponseDTO.builder()
+                    .name(res.getName())
+                    .email(res.getEmail())
+                    .socialType(SocialType.NAVER)
+                    .role("normal")
+                    .build();
+
+        } catch (Exception e) {
+            log.error("네이버 사용자 정보 요청 중 오류 발생", e);
+            throw new RuntimeException("네이버 사용자 정보 조회 중 오류가 발생했습니다. (" + e.getMessage() + ")");
+        }
     }
-
 }

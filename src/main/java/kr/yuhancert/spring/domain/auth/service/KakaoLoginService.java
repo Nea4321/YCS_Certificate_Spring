@@ -40,52 +40,87 @@ public class KakaoLoginService implements SocialLoginService{
     /// 구글 서버 에서 엑세스 토큰을 받아오는 메서드
     @Override
     public SocialTokenDTO getAccessToken(String authorizationCode) {
-        ResponseEntity<?> response = kakaoGetToken.getAccessToken(
-                KakaoRequestAccessTokenDTO.builder()
-                        .grant_type("authorization_code")
-                        .code(authorizationCode)
-                        .client_id(kakaoAppKey)
-                        .clientSecret(kakaoAppSecret)
-                        .redirect_uri(kakakoRedirectUrl)
-                        .build()
-        );
-        log.info("kakao auth info");
-        log.info(response.toString());
+        try {
+            ResponseEntity<?> response = kakaoGetToken.getAccessToken(
+                    KakaoRequestAccessTokenDTO.builder()
+                            .grant_type("authorization_code")
+                            .code(authorizationCode)
+                            .client_id(kakaoAppKey)
+                            .clientSecret(kakaoAppSecret)
+                            .redirect_uri(kakakoRedirectUrl)
+                            .build()
+            );
 
-        return new Gson()
-                .fromJson(
-                        response.getBody().toString(),
-                        SocialTokenDTO.class
-                );
+            log.debug("Kakao auth response: {}", response);
+
+            // HTTP 상태코드 확인
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new IllegalStateException("카카오 인증 서버 응답 실패 (code=" + response.getStatusCodeValue() + ")");
+            }
+
+            Object body = response.getBody();
+            if (body == null) {
+                throw new IllegalStateException("카카오 인증 응답 Body가 비어있습니다.");
+            }
+
+            return new Gson().fromJson(body.toString(), SocialTokenDTO.class);
+
+        } catch (Exception e) {
+            log.error("카카오 액세스 토큰 요청 중 오류 발생", e);
+            throw new RuntimeException("카카오 액세스 토큰 발급 실패: " + e.getMessage());
+        }
     }
 
     @Override
     public SocialUserResponseDTO getUserInfo(String accessToken) {
-        ResponseEntity<?> response = kakaoGetUser.getUserInfo(accessToken);
+        try {
+            ResponseEntity<?> response = kakaoGetUser.getUserInfo(accessToken);
 
-        log.info("kakao user response");
-        log.info(response.toString());
+            log.debug("Kakao user response: {}", response);
 
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new IllegalStateException("카카오 사용자 정보 요청 실패 (code=" + response + ")");
+            }
 
-        String jsonString = response.getBody().toString();
+            Object body = response.getBody();
+            if (body == null) {
+                throw new IllegalStateException("카카오 사용자 정보 응답 Body가 비어있습니다.");
+            }
 
-        Gson gson = new GsonBuilder()
-                .setPrettyPrinting()  //Json 출력 보기 이쁘게 해주는거
-                .registerTypeAdapter(LocalDateTime.class, new GsonLocalDateTimeAdapter()) //LocalDateTime 가능하게
-                .create(); //gson 생성 -> 이 gson은 위 설정으로 재탄생함.
+            String jsonString = body.toString();
 
-        KakaoResponseUserDTO kakaoResponse = gson.fromJson(jsonString, KakaoResponseUserDTO.class);
+            Gson gson = new GsonBuilder()
+                    .setPrettyPrinting()
+                    .registerTypeAdapter(LocalDateTime.class, new GsonLocalDateTimeAdapter())
+                    .create();
 
-        String nickname = kakaoResponse.getProperties().getNickname();
-        String email = kakaoResponse.getKakao_account().getEmail();
+            KakaoResponseUserDTO kakaoResponse = gson.fromJson(jsonString, KakaoResponseUserDTO.class);
 
+            if (kakaoResponse == null || kakaoResponse.getKakao_account() == null) {
+                throw new IllegalStateException("카카오 사용자 정보 파싱 실패: 응답 구조가 예상과 다릅니다.");
+            }
 
-        return SocialUserResponseDTO.builder()
-                .name(nickname)
-                .email(email)
-                .socialType(SocialType.KAKAO)
-                .role("normal")
-                .build();
+            String nickname = kakaoResponse.getProperties() != null
+                    ? kakaoResponse.getProperties().getNickname()
+                    : null;
+
+            String email = kakaoResponse.getKakao_account().getEmail();
+
+            if (email == null || email.isBlank()) {
+                throw new IllegalStateException("카카오 계정에 이메일 정보가 없습니다. 이메일 제공 동의가 필요합니다.");
+            }
+
+            return SocialUserResponseDTO.builder()
+                    .name(nickname != null ? nickname : "카카오사용자")
+                    .email(email)
+                    .socialType(SocialType.KAKAO)
+                    .role("normal")
+                    .build();
+
+        } catch (Exception e) {
+            log.error("카카오 사용자 정보 요청 중 오류 발생", e);
+            throw new RuntimeException("카카오 사용자 정보 요청 실패: " + e.getMessage());
+        }
     }
 
 }

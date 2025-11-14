@@ -75,7 +75,8 @@ public class AuthService {
 
             userData.setUser(user);
 
-            userRepository.save(user); // User + UserData 동시에 저장
+            User saveuser = userRepository.save(user); // User + UserData 동시에 저장
+            socialUserResponseDTO.setId(saveuser.getId());
         }
 
         Map<String, String> token = Jwt_Token_Create(socialUserResponseDTO.getId(),
