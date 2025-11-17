@@ -11,5 +11,5 @@ public interface TagMapRepository extends JpaRepository<TagMap,Long> {
     List<TagMap> findAll();
 
     @EntityGraph(attributePaths = {"certificate", "tag"})
-    List<TagMap> findAllByCertificate_Id(List<Long> id);
+    List<TagMap> findAllByCertificate_IdIn(List<Long> id);
 }

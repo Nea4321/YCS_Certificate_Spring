@@ -17,8 +17,6 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -149,7 +147,7 @@ public class CertificateService {
 
         List<Long> ids = __certificate.stream().map(Certificate::getId).collect(Collectors.toList());
 
-        tagMapEntities = tagMapRepository.findAllByCertificate_Id(ids);
+        tagMapEntities = tagMapRepository.findAllByCertificate_IdIn(ids);
 
         Map<Long, List<Long>> tagMapMap = tagMapEntities.stream()
                 .collect(Collectors.groupingBy(
