@@ -145,6 +145,23 @@ public class CertificateService {
         return certificateDTO;
     }
 
+    public List<CertificateDTO> getCertificate(List<Certificate> __certificate) {
+
+        List<Long> ids = __certificate.stream().map(Certificate::getId).collect(Collectors.toList());
+
+        tagMapEntities = tagMapRepository.findAllByCertificate_Id(ids);
+
+        Map<Long, List<Long>> tagMapMap = tagMapEntities.stream()
+                .collect(Collectors.groupingBy(
+                        tm -> tm.getCertificate().getId(),
+                        Collectors.mapping(tm -> tm.getTag().getId(), Collectors.toList())
+                ));
+
+        List<CertificateDTO> certificateDTO = certificateMapper.toCertificateDTOList(certificateEntities,  tagMapMap);
+
+        return certificateDTO;
+    }
+
     public CertDataDTO getCertData(Long __id) {
         CertDataDTO cacheCertDataDTO = cacheService.get(CacheList.CERT_DATA_CACHE.getName(), __id, CertDataDTO.class);
         if (cacheCertDataDTO != null) {
@@ -175,6 +192,10 @@ public class CertificateService {
         cacheService.put(CacheList.TAG_CACHE.getName(), CacheList.TAG_CACHE, tagDTOList);
 
         return tagDTOList;
+    }
+
+    public void deleteCertData(Long __id) {
+        certDataRepository.deleteById(__id);
     }
 
     public List<NationalCertDateDTO> getNationalSchedule() {

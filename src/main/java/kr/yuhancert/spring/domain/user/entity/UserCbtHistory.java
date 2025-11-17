@@ -3,6 +3,8 @@ package kr.yuhancert.spring.domain.user.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import kr.yuhancert.spring.domain.auth.entity.User;
+import kr.yuhancert.spring.domain.cbt.entity.Previous;
+import kr.yuhancert.spring.domain.certificate.entity.Certificate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,6 +14,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -20,8 +23,9 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserCbtHistory {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
@@ -32,8 +36,10 @@ public class UserCbtHistory {
     private User user;
 
     @NotNull
-    @Column(name = "certificate_id", nullable = false)
-    private Long certificateId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "certificate_id", nullable = false)
+    private Certificate certificate;
 
     @Column(name = "score")
     private Integer score;
@@ -41,13 +47,15 @@ public class UserCbtHistory {
     @Column(name = "correct_count")
     private Integer correctCount;
 
-    @Column(name = "privious_id")
-    private Long priviousId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "previous_id")
+    private Previous previous;
 
     @Column(name = "created_at")
-    @CreationTimestamp
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(name = "left_time")
-    private Integer lefttime;
+    private Integer leftTime;
+
 }

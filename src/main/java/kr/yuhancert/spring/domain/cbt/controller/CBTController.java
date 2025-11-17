@@ -1,0 +1,65 @@
+package kr.yuhancert.spring.domain.cbt.controller;
+
+import ch.qos.logback.classic.Logger;
+import kr.yuhancert.spring.domain.cbt.dto.CBTDTO;
+import kr.yuhancert.spring.domain.cbt.service.CBTService;
+import kr.yuhancert.spring.domain.certificate.dto.CertificateDTO;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("api/cbt")
+public class CBTController {
+
+    private final CBTService cbtService;
+    private Map<String, String> errorResponse = new HashMap<>();
+    private final Logger logger = (Logger) LoggerFactory.getLogger(this.getClass());
+
+    public CBTController(CBTService __cbtService) {
+        this.cbtService = __cbtService;
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getCBTList() {
+        try {
+            List<CertificateDTO> certificateDTOList = cbtService.getCBTList();
+            logger.info(certificateDTOList.toString());
+            return ResponseEntity.ok(certificateDTOList);
+        } catch (Exception e) {
+            logger.error("Error getting certificate list", e);
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new java.util.Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR) // 500
+                    .body(errorResponse);
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getQuestionInfo(@PathVariable("id") Long __id) {
+        try {
+            List<CBTDTO> cbtDTOList = cbtService.getCBTDTOList(__id);
+            return ResponseEntity.ok(cbtDTOList);
+        } catch (Exception e) {
+            logger.error("Error getting certificate info", e);
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new java.util.Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+}

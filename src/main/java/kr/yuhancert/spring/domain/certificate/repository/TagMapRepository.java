@@ -9,4 +9,7 @@ import java.util.List;
 public interface TagMapRepository extends JpaRepository<TagMap,Long> {
     @EntityGraph(attributePaths = {"certificate", "tag"})
     List<TagMap> findAll();
+
+    @EntityGraph(attributePaths = {"certificate", "tag"})
+    List<TagMap> findAllByCertificate_Id(List<Long> id);
 }

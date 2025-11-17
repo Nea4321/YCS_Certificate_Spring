@@ -132,6 +132,24 @@ public class CertificateController {
         }
     }
 
+    @GetMapping("/delete/{id}")
+    public ResponseEntity<?> deleteCertData(@RequestParam("id") Long __id) {
+        try{
+            certificateService.deleteCertData(__id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.error("Error deleting certificate data", e);
+            errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
     @PostMapping("/run-fallback")
     public ResponseEntity<String> runByFallback(@RequestParam String certName) throws Exception {
         certificateService.runFallback(certName);

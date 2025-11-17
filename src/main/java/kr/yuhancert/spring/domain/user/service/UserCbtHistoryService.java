@@ -10,6 +10,7 @@ import kr.yuhancert.spring.domain.certificate.repository.CertificateRepository;
 import kr.yuhancert.spring.domain.user.dto.UserCbtHistoryDTO;
 import kr.yuhancert.spring.domain.user.dto.UserCbtHistoryResponseDTO;
 import kr.yuhancert.spring.domain.user.entity.UserCbtHistory;
+import kr.yuhancert.spring.domain.user.mapper.UserCbtHistoryMapper;
 import kr.yuhancert.spring.domain.user.repository.UserCbtHistoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,13 +30,15 @@ public class UserCbtHistoryService {
     private final UserCbtHistoryRepository userCbtHistoryRepository;
     private final CertificateRepository certificateRepository;
     private final UserRepository userRepository;
+    private final UserCbtHistoryMapper userCbtHistoryMapper;
 
     public UserCbtHistoryService(JwtService __jwtService, UserCbtHistoryRepository __userCbtHistoryRepository, CertificateRepository certificateRepository
-    , UserRepository __userRepository) {
+    , UserRepository __userRepository, UserCbtHistoryMapper __userCbtHistoryMapper) {
         this.jwtService = __jwtService;
         this.userCbtHistoryRepository = __userCbtHistoryRepository;
         this.certificateRepository = certificateRepository;
         this.userRepository = __userRepository;
+        this.userCbtHistoryMapper = __userCbtHistoryMapper;
     }
 
     // cbt 기록 정보 요청
@@ -47,7 +50,7 @@ public class UserCbtHistoryService {
             Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
 
             // 사용자 CBT 기록 조회
-            List<UserCbtHistory> histories = userCbtHistoryRepository.findAllByUser_Id(userId);
+            List<UserCbtHistory> histories = userCbtHistoryRepository.findDistinctCertificateByUser_Id(userId);
 
             // 기록 없으면 빈 리스트 반환
             if (histories.isEmpty()) {
@@ -59,24 +62,24 @@ public class UserCbtHistoryService {
             return histories.stream().map(history -> {
 
                 Certificate cert = certificateRepository
-                        .findById(history.getCertificateId())
+                        .findById(history.getCertificate().getId())
                         .orElse(null);
 
                 if (cert == null) {
                     log.warn("certificate 정보 없음: certificateId={} (userId={})",
-                            history.getCertificateId(), userId);
+                            history.getCertificate().getId(), userId);
                 }
 
                 String certName = (cert != null) ? cert.getCertificateName() : null;
 
                 return new UserCbtHistoryResponseDTO(
-                        history.getCertificateId(),
+                        history.getCertificate().getId(),
                         certName,
                         history.getScore(),
                         history.getCorrectCount(),
-                        history.getPriviousId(),
+                        history.getPrevious().getId(),
                         history.getCreatedAt(),
-                        history.getLefttime()
+                        history.getLeftTime()
                 );
             }).collect(Collectors.toList());
 
@@ -94,12 +97,6 @@ public class UserCbtHistoryService {
             Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
             log.info("CBT 기록 저장 완료: "+dto.getLeft_time());
             List<UserCbtHistory> histories = userCbtHistoryRepository.findAllByUser_IdOrderByCreatedAtAsc(userId);
-
-            if (histories.size() >= 5) {
-                // 가장 최근 기록 삭제
-                UserCbtHistory newest = histories.get(0); // 가장 최신
-                userCbtHistoryRepository.delete(newest);
-            }
 
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("유저 정보를 찾을 수 없습니다."));

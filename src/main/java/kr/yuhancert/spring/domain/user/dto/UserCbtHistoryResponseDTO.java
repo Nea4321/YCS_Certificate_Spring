@@ -11,11 +11,13 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserCbtHistoryResponseDTO {
+    private Long user_cbt_history_id;
+    private Long user_id;
     private Long certificate_id;
     private String certificate_name;
     private Integer score;
-    private Integer correct_Count;
-    private Long privious_id;
+    private Integer correct_count;
+    private Long previous_id;
     private Instant created_at;
     private Integer left_time;
 }
