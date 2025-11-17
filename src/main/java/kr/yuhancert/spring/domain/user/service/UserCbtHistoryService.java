@@ -5,14 +5,21 @@ import jakarta.servlet.http.HttpServletRequest;
 import kr.yuhancert.spring.domain.auth.entity.User;
 import kr.yuhancert.spring.domain.auth.repository.UserRepository;
 import kr.yuhancert.spring.domain.auth.service.JwtService;
+import kr.yuhancert.spring.domain.cbt.entity.Answer;
 import kr.yuhancert.spring.domain.cbt.entity.Previous;
+import kr.yuhancert.spring.domain.cbt.entity.Question;
+import kr.yuhancert.spring.domain.cbt.repository.AnswerRepository;
 import kr.yuhancert.spring.domain.cbt.repository.PreivousRepository;
+import kr.yuhancert.spring.domain.cbt.repository.QuestionRepository;
 import kr.yuhancert.spring.domain.certificate.entity.Certificate;
 import kr.yuhancert.spring.domain.certificate.repository.CertificateRepository;
+import kr.yuhancert.spring.domain.user.dto.UserAnswerDTO;
 import kr.yuhancert.spring.domain.user.dto.UserCbtHistoryCertDTO;
 import kr.yuhancert.spring.domain.user.dto.UserCbtHistoryDTO;
+import kr.yuhancert.spring.domain.user.entity.UserAnswer;
 import kr.yuhancert.spring.domain.user.entity.UserCbtHistory;
 import kr.yuhancert.spring.domain.user.mapper.UserCbtHistoryCertMapper;
+import kr.yuhancert.spring.domain.user.repository.UserAnswerRepository;
 import kr.yuhancert.spring.domain.user.repository.UserCbtHistoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,10 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,16 +39,22 @@ public class UserCbtHistoryService {
     private final CertificateRepository certificateRepository;
     private final UserRepository userRepository;
     private final PreivousRepository preivousRepository;
+    private final QuestionRepository questionRepository;
+    private final AnswerRepository answerRepository;
     private final UserCbtHistoryCertMapper userCbtHistoryCertMapper;
+    private final UserAnswerRepository userAnswerRepository;
 
     public UserCbtHistoryService(JwtService __jwtService, UserCbtHistoryRepository __userCbtHistoryRepository, CertificateRepository certificateRepository
-    , UserRepository __userRepository, PreivousRepository __previousRepository, UserCbtHistoryCertMapper __userCbtHistoryCertMapper) {
+    , UserRepository __userRepository, PreivousRepository __previousRepository, QuestionRepository __questionRepository, AnswerRepository __answerRepository, UserCbtHistoryCertMapper __userCbtHistoryCertMapper, UserAnswerRepository userAnswerRepository) {
         this.jwtService = __jwtService;
         this.userCbtHistoryRepository = __userCbtHistoryRepository;
         this.certificateRepository = certificateRepository;
         this.userRepository = __userRepository;
         this.preivousRepository = __previousRepository;
+        this.questionRepository = __questionRepository;
+        this.answerRepository = __answerRepository;
         this.userCbtHistoryCertMapper = __userCbtHistoryCertMapper;
+        this.userAnswerRepository = userAnswerRepository;
     }
 
     // cbt 기록 정보 요청
@@ -130,6 +140,32 @@ public class UserCbtHistoryService {
             userCbtHistoryRepository.save(history);
 
             log.info("CBT 기록 저장 완료: userId={}, certId={}", userId, dto.getCertificate_id());
+
+            List<UserAnswerDTO> answers = dto.getAnswers();
+
+            List<UserAnswer> userAnswerList = new ArrayList<>();
+
+            List<Question> questions = questionRepository.findByCertificate(cert);
+
+            List<Answer> answerList = answerRepository.findByQuestionIn(questions);
+
+            Map<Long, Answer> answerMap = answerList.stream()
+                    .collect(Collectors.toMap(Answer::getId, a -> a));
+
+            for (UserAnswerDTO a : answers) {
+
+                UserAnswer userAnswer = new UserAnswer();
+                userAnswer.setUser(user);
+                userAnswer.setCertificate(cert);
+                userAnswer.setAnswer(answerMap.get(a.getId()));
+                userAnswer.setBool(a.getBool());
+
+                userAnswerList.add(userAnswer);
+            }
+
+            userAnswerRepository.saveAll(userAnswerList);
+
+            log.info("유저 답안 기록 저장 완료: userId={}, certId={}", userId, dto.getCertificate_id());
 
             return ResponseEntity.ok("CBT 기록 저장 성공");
 

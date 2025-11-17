@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 
 ///  프론트엔드 에서 백엔드로 보내는 cbt 기록 저장 데이터
 @Data
@@ -17,4 +18,6 @@ public class UserCbtHistoryDTO {
     private Integer correct_Count;
     private Integer left_time;
     private Long previous_id;
+
+    private List<UserAnswerDTO> answers;
 }
