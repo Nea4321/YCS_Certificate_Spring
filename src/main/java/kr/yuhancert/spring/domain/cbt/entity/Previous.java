@@ -24,7 +24,6 @@ public class Previous {
     @Column(name = "previous_id", nullable = false)
     private Long id;
 
-    @NotNull
     @Column(name = "previous_name", nullable = false, length = Integer.MAX_VALUE)
     private String previousName;
 

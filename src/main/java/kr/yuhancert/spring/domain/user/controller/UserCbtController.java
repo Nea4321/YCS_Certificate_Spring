@@ -2,6 +2,7 @@ package kr.yuhancert.spring.domain.user.controller;
 
 import ch.qos.logback.classic.Logger;
 import jakarta.servlet.http.HttpServletRequest;
+import kr.yuhancert.spring.domain.cbt.dto.PreviousDTO;
 import kr.yuhancert.spring.domain.user.dto.UserIncorrectDTO;
 import kr.yuhancert.spring.domain.user.service.UserCbtService;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,23 @@ public class UserCbtController {
         this.userCbtService = __userCbtService;
     }
 
+    @GetMapping({"/{question_info_id}"})
+    public ResponseEntity<?> getRandomQuestion(@PathVariable("question_info_id") Long __questionInfoId, HttpServletRequest request) {
+        try {
+            PreviousDTO previousDTO = userCbtService.getRandomQuestion(__questionInfoId, request);
+            logger.info(previousDTO.toString());
+            return ResponseEntity.ok(previousDTO);
+        } catch (Exception e) {
+            logger.error("Error getting user question", e);
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new java.util.Date().toString());
 
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
 
     @GetMapping("/incorrect/{cert_id}")
     public ResponseEntity<?> getUserIncorrect(@PathVariable("cert_id") Long __certId, HttpServletRequest request) {
