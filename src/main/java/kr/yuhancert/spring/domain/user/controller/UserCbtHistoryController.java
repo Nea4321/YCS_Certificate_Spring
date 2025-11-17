@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import kr.yuhancert.spring.domain.user.dto.UserCbtHistoryCertDTO;
 import kr.yuhancert.spring.domain.user.dto.UserCbtHistoryDTO;
+import kr.yuhancert.spring.domain.user.dto.UserPreviousDTO;
 import kr.yuhancert.spring.domain.user.service.UserCbtHistoryService;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -38,6 +39,24 @@ public class UserCbtHistoryController {
 
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR) // 500
+                    .body(errorResponse);
+        }
+    }
+
+    @GetMapping("previous/{previous_id}")
+    public ResponseEntity<?> getUserPrevious(@PathVariable("previous_id") Long __previousId, HttpServletRequest request) {
+        try {
+            UserPreviousDTO userPreviousDTO = userCbtHistoryService.getUserPreviousDTO(__previousId, request);
+            logger.info(userPreviousDTO.toString());
+            return ResponseEntity.ok(userPreviousDTO);
+        } catch (Exception e) {
+            logger.error("Error getting user previous", e);
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new java.util.Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorResponse);
         }
     }

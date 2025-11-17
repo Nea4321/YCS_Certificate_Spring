@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PreivousRepository extends JpaRepository<Previous, Long> {
+    Previous findByTypeAndTypeId(String type, Long typeId);
 }

@@ -2,6 +2,7 @@ package kr.yuhancert.spring.domain.cbt.controller;
 
 import ch.qos.logback.classic.Logger;
 import kr.yuhancert.spring.domain.cbt.dto.CBTDTO;
+import kr.yuhancert.spring.domain.cbt.dto.PreviousDTO;
 import kr.yuhancert.spring.domain.cbt.service.CBTService;
 import kr.yuhancert.spring.domain.certificate.dto.CertificateDTO;
 import org.slf4j.LoggerFactory;
@@ -46,13 +47,32 @@ public class CBTController {
         }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getQuestionInfo(@PathVariable("id") Long __id) {
+    @GetMapping("/{cert_id}")
+    public ResponseEntity<?> getQuestionInfo(@PathVariable("cert_id") Long __certId) {
         try {
-            List<CBTDTO> cbtDTOList = cbtService.getCBTDTOList(__id);
+            List<CBTDTO> cbtDTOList = cbtService.getCBTDTOList(__certId);
+            logger.info(cbtDTOList.toString());
             return ResponseEntity.ok(cbtDTOList);
         } catch (Exception e) {
             logger.error("Error getting certificate info", e);
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new java.util.Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
+    @GetMapping({"/{question_info_id}"})
+    public ResponseEntity<?> getPrevious(@PathVariable("question_info_id") Long __questionInfoId) {
+        try {
+            PreviousDTO previousDTO = cbtService.getPrevious(__questionInfoId);
+            logger.info(previousDTO.toString());
+            return ResponseEntity.ok(previousDTO);
+        } catch (Exception e) {
+            logger.error("Error getting previous question", e);
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());
             errorResponse.put("timestamp", new java.util.Date().toString());

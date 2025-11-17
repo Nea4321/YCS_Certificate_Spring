@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import kr.yuhancert.spring.domain.auth.entity.User;
 import kr.yuhancert.spring.domain.cbt.entity.Answer;
+import kr.yuhancert.spring.domain.cbt.entity.Previous;
 import kr.yuhancert.spring.domain.certificate.entity.Certificate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,6 +20,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserAnswer {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -45,5 +47,10 @@ public class UserAnswer {
     @NotNull
     @Column(name = "bool", nullable = false)
     private Boolean bool = false;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "previous_id", nullable = false)
+    private Previous previous;
 
 }

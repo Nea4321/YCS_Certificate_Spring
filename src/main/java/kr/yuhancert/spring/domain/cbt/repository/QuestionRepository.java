@@ -12,4 +12,6 @@ import java.util.List;
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     @EntityGraph(attributePaths = {"certificate", "question_type"})
     List<Question> findByCertificate(Certificate cert);
+
+    List<Question> findByIdIn(List<Long> ids);
 }

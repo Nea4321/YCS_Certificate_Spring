@@ -7,9 +7,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class UserAnswerDTO {
+@NoArgsConstructor
+public class UserIncorrectAnswerDTO {
     Long answer_id;
     Boolean bool;
+    String content;
+    String img;
 }

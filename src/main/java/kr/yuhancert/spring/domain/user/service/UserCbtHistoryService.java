@@ -7,17 +7,18 @@ import kr.yuhancert.spring.domain.auth.repository.UserRepository;
 import kr.yuhancert.spring.domain.auth.service.JwtService;
 import kr.yuhancert.spring.domain.cbt.entity.Answer;
 import kr.yuhancert.spring.domain.cbt.entity.Previous;
+import kr.yuhancert.spring.domain.cbt.entity.PreviousType;
 import kr.yuhancert.spring.domain.cbt.entity.Question;
+import kr.yuhancert.spring.domain.cbt.mapper.PreviousMapper;
 import kr.yuhancert.spring.domain.cbt.repository.AnswerRepository;
 import kr.yuhancert.spring.domain.cbt.repository.PreivousRepository;
 import kr.yuhancert.spring.domain.cbt.repository.QuestionRepository;
 import kr.yuhancert.spring.domain.certificate.entity.Certificate;
 import kr.yuhancert.spring.domain.certificate.repository.CertificateRepository;
-import kr.yuhancert.spring.domain.user.dto.UserAnswerDTO;
-import kr.yuhancert.spring.domain.user.dto.UserCbtHistoryCertDTO;
-import kr.yuhancert.spring.domain.user.dto.UserCbtHistoryDTO;
+import kr.yuhancert.spring.domain.user.dto.*;
 import kr.yuhancert.spring.domain.user.entity.UserAnswer;
 import kr.yuhancert.spring.domain.user.entity.UserCbtHistory;
+import kr.yuhancert.spring.domain.user.mapper.UserAnswerMapper;
 import kr.yuhancert.spring.domain.user.mapper.UserCbtHistoryCertMapper;
 import kr.yuhancert.spring.domain.user.repository.UserAnswerRepository;
 import kr.yuhancert.spring.domain.user.repository.UserCbtHistoryRepository;
@@ -43,9 +44,11 @@ public class UserCbtHistoryService {
     private final AnswerRepository answerRepository;
     private final UserCbtHistoryCertMapper userCbtHistoryCertMapper;
     private final UserAnswerRepository userAnswerRepository;
+    private final UserAnswerMapper userAnswerMapper;
+    private final PreviousMapper previousMapper;
 
     public UserCbtHistoryService(JwtService __jwtService, UserCbtHistoryRepository __userCbtHistoryRepository, CertificateRepository certificateRepository
-    , UserRepository __userRepository, PreivousRepository __previousRepository, QuestionRepository __questionRepository, AnswerRepository __answerRepository, UserCbtHistoryCertMapper __userCbtHistoryCertMapper, UserAnswerRepository userAnswerRepository) {
+    , UserRepository __userRepository, PreivousRepository __previousRepository, QuestionRepository __questionRepository, AnswerRepository __answerRepository, UserCbtHistoryCertMapper __userCbtHistoryCertMapper, UserAnswerRepository userAnswerRepository, UserAnswerMapper userAnswerMapper, PreviousMapper previousMapper) {
         this.jwtService = __jwtService;
         this.userCbtHistoryRepository = __userCbtHistoryRepository;
         this.certificateRepository = certificateRepository;
@@ -55,6 +58,8 @@ public class UserCbtHistoryService {
         this.answerRepository = __answerRepository;
         this.userCbtHistoryCertMapper = __userCbtHistoryCertMapper;
         this.userAnswerRepository = userAnswerRepository;
+        this.userAnswerMapper = userAnswerMapper;
+        this.previousMapper = previousMapper;
     }
 
     // cbt 기록 정보 요청
@@ -111,6 +116,27 @@ public class UserCbtHistoryService {
         }
     }
 
+    public UserPreviousDTO getUserPreviousDTO(Long __previousId, HttpServletRequest request) {
+        Claims claims = jwtService.parseClaims(request);
+        Object idObj = claims.get("id");
+        Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
+
+        Previous previous = preivousRepository.findById(__previousId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 기록을 찾을 수 없습니다."));
+
+        if (!Objects.equals(previous.getType(), PreviousType.user.toString()) || !Objects.equals(previous.getTypeId(), userId))
+            throw new IllegalArgumentException("유저 정보가 다릅니다");
+
+        List<UserAnswer> userAnswerList = userAnswerRepository.findByPrevious(previous);
+
+        UserPreviousDTO userPreviousDTO = new UserPreviousDTO(
+                previousMapper.toPreviousDTO(previous),
+                userAnswerMapper.toUserAnswerDTOList(userAnswerList)
+        );
+
+        return userPreviousDTO;
+    }
+
     public ResponseEntity<?> addCbtHistory(UserCbtHistoryDTO dto, HttpServletRequest request) {
 
         try {
@@ -157,8 +183,9 @@ public class UserCbtHistoryService {
                 UserAnswer userAnswer = new UserAnswer();
                 userAnswer.setUser(user);
                 userAnswer.setCertificate(cert);
-                userAnswer.setAnswer(answerMap.get(a.getId()));
+                userAnswer.setAnswer(answerMap.get(a.getAnswer_id()));
                 userAnswer.setBool(a.getBool());
+                userAnswer.setPrevious(previous);
 
                 userAnswerList.add(userAnswer);
             }

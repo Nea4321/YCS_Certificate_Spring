@@ -10,6 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PreviousDTO {
-    String previous;
-    String user_answer;
+    Long previous_id;
+    String previous_name;
+    QuestionInfoDTO list;
 }

@@ -2,6 +2,7 @@ package kr.yuhancert.spring.domain.cbt.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import kr.yuhancert.spring.domain.cbt.dto.QuestionInfoDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +11,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
-import java.util.Map;
 
 @Getter
 @Setter
@@ -39,7 +39,7 @@ public class Previous {
     @NotNull
     @Column(name = "list", nullable = false)
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, Object> list;
+    private QuestionInfoDTO list;
 
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
