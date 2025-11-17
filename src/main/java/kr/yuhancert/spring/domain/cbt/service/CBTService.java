@@ -56,8 +56,6 @@ public class CBTService {
         return cbtMapper.toCBTDTOList(questionInfoList);
     }
 
-    public
-
     public Boolean isMain(Long __id) {
         QuestionInfo questionInfo = questionInfoRepository.findById(__id).orElse(null);
         if(questionInfo == null)
@@ -65,8 +63,8 @@ public class CBTService {
         return questionInfo.getMain();
     }
 
-    public QuestionInfoDTO getQuestion(Long __id) {
-
-    }
+//    public QuestionInfoDTO getQuestion(Long __id) {
+//
+//    }
 
 }

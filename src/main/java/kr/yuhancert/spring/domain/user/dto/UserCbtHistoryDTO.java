@@ -16,5 +16,5 @@ public class UserCbtHistoryDTO {
     private Integer score;
     private Integer correct_Count;
     private Integer left_time;
-//    private Long privious_id;
+    private Long previous_id;
 }

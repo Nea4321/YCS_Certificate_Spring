@@ -13,9 +13,9 @@ public interface UserCbtHistoryRepository extends JpaRepository<UserCbtHistory, 
     @EntityGraph(attributePaths = {"user"})
     List<UserCbtHistory> findAllByUser_Id(Long userId);
 
-    @EntityGraph(attributePaths = {"user"})
-    @Query("SELECT distinct h.certificate.id from UserCbtHistory h where h.user.id = :userId")
-    List<UserCbtHistory> findDistinctCertificateByUser_Id(Long userId);
+//    @EntityGraph(attributePaths = {"user"})
+//    @Query("SELECT distinct h.certificate.id from UserCbtHistory h where h.user.id = :userId")
+//    List<UserCbtHistory> findDistinctCertificateByUser_Id(Long userId);
 
     List<UserCbtHistory> findAllByUser_IdOrderByCreatedAtAsc(Long userId);
 }

@@ -3,8 +3,8 @@ package kr.yuhancert.spring.domain.user.controller;
 import ch.qos.logback.classic.Logger;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import kr.yuhancert.spring.domain.user.dto.UserCbtHistoryCertDTO;
 import kr.yuhancert.spring.domain.user.dto.UserCbtHistoryDTO;
-import kr.yuhancert.spring.domain.user.dto.UserCbtHistoryResponseDTO;
 import kr.yuhancert.spring.domain.user.service.UserCbtHistoryService;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -27,11 +27,11 @@ public class UserCbtHistoryController {
     @GetMapping
     public ResponseEntity<?> getUserCbtHistory(HttpServletRequest request){
         try {
-            List<UserCbtHistoryResponseDTO> response = userCbtHistoryService.getCbtHistory(request);
+            List<UserCbtHistoryCertDTO> response = userCbtHistoryService.getCbtHistory(request);
             logger.info(response.toString());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("Error getting user favorite list", e);
+            logger.error("Error getting user cbt list", e);
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());
             errorResponse.put("timestamp", new java.util.Date().toString());
