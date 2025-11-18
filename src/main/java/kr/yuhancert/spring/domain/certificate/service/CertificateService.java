@@ -193,6 +193,9 @@ public class CertificateService {
     }
 
     public void deleteCertData(Long __id) {
+        cacheService.evict(CacheList.CERT_DATA_CACHE.getName(), "list");
+        cacheService.clear(CacheList.CERT_DATA_CACHE.getName());
+
         certDataRepository.deleteById(__id);
     }
 

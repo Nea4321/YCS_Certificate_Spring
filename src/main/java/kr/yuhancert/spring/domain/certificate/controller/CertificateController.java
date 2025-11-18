@@ -60,6 +60,24 @@ public class CertificateController {
         }
     }
 
+    @GetMapping("/delete/{id}")
+    public ResponseEntity<?> deleteCertData(@RequestParam("id") Long __id) {
+        try{
+            certificateService.deleteCertData(__id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.error("Error deleting certificate data", e);
+            errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal Server Error");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new Date().toString());
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
     @GetMapping("/organization")
     public ResponseEntity<?> getOrganization() {
         try {
@@ -121,24 +139,6 @@ public class CertificateController {
             return ResponseEntity.ok(schedule);
         } catch (Exception e) {
             logger.error("Error getting schedule data", e);
-            errorResponse = new HashMap<>();
-            errorResponse.put("error", "Internal Server Error");
-            errorResponse.put("message", e.getMessage());
-            errorResponse.put("timestamp", new Date().toString());
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorResponse);
-        }
-    }
-
-    @GetMapping("/delete/{id}")
-    public ResponseEntity<?> deleteCertData(@RequestParam("id") Long __id) {
-        try{
-            certificateService.deleteCertData(__id);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            logger.error("Error deleting certificate data", e);
             errorResponse = new HashMap<>();
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());

@@ -120,10 +120,4 @@ public class JsonCertificateParser {
 
         certDataRepository.save(entity);
     }
-
-    private static String toJsonOrNull(JsonNode n) {
-        return (n == null || n.isMissingNode() || n.isNull()) ? null : n.toString();
-    }
-
-
 }
