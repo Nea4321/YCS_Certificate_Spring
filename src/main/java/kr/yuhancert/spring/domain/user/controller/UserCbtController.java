@@ -25,7 +25,7 @@ public class UserCbtController {
     }
 
     @GetMapping(params = "question_info_id")
-    public ResponseEntity<?> getRandomQuestion(@RequestParam Long __questionInfoId, HttpServletRequest request) {
+    public ResponseEntity<?> getRandomQuestion(@RequestParam("question_info_id") Long __questionInfoId, HttpServletRequest request) {
         try {
             PreviousDTO previousDTO = userCbtService.getRandomQuestion(__questionInfoId, request);
             logger.info(previousDTO.toString());

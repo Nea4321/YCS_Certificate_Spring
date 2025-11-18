@@ -10,4 +10,6 @@ public interface UserAnswerRepository extends JpaRepository<UserAnswer, Long> {
     List<UserAnswer> findByPrevious(Previous previous);
 
     List<UserAnswer> findByCertificate_Id(Long certificateId);
+
+    List<UserAnswer> findByUser_IdAndCertificate_Id(Long userId, Long certificateId);
 }

@@ -52,6 +52,7 @@ public class UserCbtHistory {
     @JoinColumn(name = "previous_id")
     private Previous previous;
 
+    @CreationTimestamp
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
