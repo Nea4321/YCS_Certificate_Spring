@@ -38,4 +38,7 @@ public class Answer {
     @Column(name = "img", length = Integer.MAX_VALUE)
     private String img;
 
+    @Column(name = "solution", length = Integer.MAX_VALUE)
+    private String solution;
+
 }

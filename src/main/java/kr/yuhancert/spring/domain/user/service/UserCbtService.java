@@ -109,6 +109,7 @@ public class UserCbtService {
             answerDTO.setBool(a.getBool());
             answerDTO.setContent(a.getContent());
             answerDTO.setImg(a.getImg());
+            answerDTO.setSolution(a.getSolution() == null ? "" : a.getSolution());
 
             answerListMap.computeIfAbsent(a.getQuestion().getId(), k -> new ArrayList<>()).add(answerDTO);
         }
@@ -243,6 +244,7 @@ public class UserCbtService {
             dto.setContent(a.getContent());
             dto.setBool(a.getBool());
             dto.setImg(a.getImg());
+            dto.setSolution(a.getSolution() == null ? "" : a.getSolution());
 
             userIncorrectAnswerDTOMapList
                     .computeIfAbsent(a.getQuestion().getId(), k -> new ArrayList<>())

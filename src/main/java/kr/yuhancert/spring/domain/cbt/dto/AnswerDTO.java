@@ -15,4 +15,5 @@ public class AnswerDTO {
     Boolean bool;
     String content;
     String img;
+    String solution;
 }

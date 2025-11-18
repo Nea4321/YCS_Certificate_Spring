@@ -14,4 +14,5 @@ public class UserIncorrectAnswerDTO {
     Boolean bool;
     String content;
     String img;
+    String solution;
 }
