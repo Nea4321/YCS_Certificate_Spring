@@ -155,9 +155,7 @@ public class CertificateService {
                         Collectors.mapping(tm -> tm.getTag().getId(), Collectors.toList())
                 ));
 
-        List<CertificateDTO> certificateDTO = certificateMapper.toCertificateDTOList(certificateEntities,  tagMapMap);
-
-        return certificateDTO;
+        return certificateMapper.toCertificateDTOList(__certificate, tagMapMap);
     }
 
     public CertDataDTO getCertData(Long __id) {
