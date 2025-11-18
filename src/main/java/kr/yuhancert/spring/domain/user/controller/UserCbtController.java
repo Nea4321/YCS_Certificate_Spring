@@ -8,10 +8,7 @@ import kr.yuhancert.spring.domain.user.service.UserCbtService;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,8 +24,8 @@ public class UserCbtController {
         this.userCbtService = __userCbtService;
     }
 
-    @GetMapping({"/{question_info_id}"})
-    public ResponseEntity<?> getRandomQuestion(@PathVariable("question_info_id") Long __questionInfoId, HttpServletRequest request) {
+    @GetMapping(params = "question_info_id")
+    public ResponseEntity<?> getRandomQuestion(@RequestParam Long __questionInfoId, HttpServletRequest request) {
         try {
             PreviousDTO previousDTO = userCbtService.getRandomQuestion(__questionInfoId, request);
             logger.info(previousDTO.toString());
@@ -45,8 +42,8 @@ public class UserCbtController {
         }
     }
 
-    @GetMapping("/incorrect/{cert_id}")
-    public ResponseEntity<?> getUserIncorrect(@PathVariable("cert_id") Long __certId, HttpServletRequest request) {
+    @GetMapping(params = "cert_id")
+    public ResponseEntity<?> getUserIncorrect(@RequestParam Long __certId, HttpServletRequest request) {
         try {
             UserIncorrectDTO userIncorrectDTO = userCbtService.getUserIncorrect(__certId, request);
             logger.info(userIncorrectDTO.toString());

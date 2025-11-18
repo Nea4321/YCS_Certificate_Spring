@@ -87,6 +87,10 @@ public class UserCbtService {
             questionListMap.put(qt.getId(), questionList);
         }
 
+        questionTypeList.sort(Comparator.comparing(
+                qt -> qt.getPriority() == null ? Integer.MAX_VALUE : qt.getPriority()
+        ));
+
         List<Question> questionList = questionListMap.values().stream()
                 .flatMap(List::stream)
                 .toList();
@@ -180,6 +184,19 @@ public class UserCbtService {
 
             questionTypeDTOList.add(typeDTO);
         }
+
+        long questionNum = 1L;
+
+        for (QuestionType qt : questionTypeList) {
+
+            List<QuestionDTO> qList = questionDTOListMap.get(qt.getId());
+            if (qList == null) continue;
+
+            for (QuestionDTO qdto : qList) {
+                qdto.setQuestion_num(questionNum++);
+            }
+        }
+
 
         return new QuestionInfoDTO(
                 __questionInfo.getId(),
