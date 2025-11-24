@@ -7,7 +7,6 @@ import kr.yuhancert.spring.domain.auth.repository.UserRepository;
 import kr.yuhancert.spring.domain.auth.service.JwtService;
 import kr.yuhancert.spring.domain.cbt.entity.Answer;
 import kr.yuhancert.spring.domain.cbt.entity.Previous;
-import kr.yuhancert.spring.domain.cbt.entity.PreviousType;
 import kr.yuhancert.spring.domain.cbt.entity.Question;
 import kr.yuhancert.spring.domain.cbt.mapper.PreviousMapper;
 import kr.yuhancert.spring.domain.cbt.repository.AnswerRepository;
@@ -124,17 +123,15 @@ public class UserCbtHistoryService {
         Previous previous = preivousRepository.findById(__previousId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 기록을 찾을 수 없습니다."));
 
-        if (!Objects.equals(previous.getType(), PreviousType.user.toString()) || !Objects.equals(previous.getTypeId(), userId))
+        if (!Objects.equals(previous.getTypeId(), userId))
             throw new IllegalArgumentException("유저 정보가 다릅니다");
 
         List<UserAnswer> userAnswerList = userAnswerRepository.findByPrevious(previous);
 
-        UserPreviousDTO userPreviousDTO = new UserPreviousDTO(
+        return new UserPreviousDTO(
                 previousMapper.toPreviousDTO(previous),
                 userAnswerMapper.toUserAnswerDTOList(userAnswerList)
         );
-
-        return userPreviousDTO;
     }
 
     public ResponseEntity<?> addCbtHistory(UserCbtHistoryDTO dto, HttpServletRequest request) {

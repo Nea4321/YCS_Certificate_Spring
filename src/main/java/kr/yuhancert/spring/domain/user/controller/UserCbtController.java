@@ -3,7 +3,6 @@ package kr.yuhancert.spring.domain.user.controller;
 import ch.qos.logback.classic.Logger;
 import jakarta.servlet.http.HttpServletRequest;
 import kr.yuhancert.spring.domain.cbt.dto.PreviousDTO;
-import kr.yuhancert.spring.domain.user.dto.UserIncorrectDTO;
 import kr.yuhancert.spring.domain.user.service.UserCbtService;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -45,9 +44,9 @@ public class UserCbtController {
     @GetMapping(params = "cert_id")
     public ResponseEntity<?> getUserIncorrect(@RequestParam Long __certId, HttpServletRequest request) {
         try {
-            UserIncorrectDTO userIncorrectDTO = userCbtService.getUserIncorrect(__certId, request);
-            logger.info(userIncorrectDTO.toString());
-            return ResponseEntity.ok(userIncorrectDTO);
+            PreviousDTO previousDTO = userCbtService.getIncorrect(__certId, request);
+            logger.info(previousDTO.toString());
+            return ResponseEntity.ok(previousDTO);
         } catch (Exception e) {
             logger.error("Error getting user incorrect", e);
             errorResponse.put("error", "Internal Server Error");

@@ -70,6 +70,24 @@ public class UserCbtService {
         return previousMapper.toPreviousDTO(previous);
     }
 
+    public PreviousDTO getIncorrect(Long __certId, HttpServletRequest request) {
+        Claims claims = jwtService.parseClaims(request);
+        Object idObj = claims.get("id");
+        Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
+
+        QuestionInfoDTO questionInfoDTO = generateIncorrect(__certId, request);
+
+        Previous addPrevious = new Previous();
+
+        addPrevious.setType(PreviousType.incorrect.toString());
+        addPrevious.setTypeId(userId);
+        addPrevious.setList(questionInfoDTO);
+
+        Previous previous = preivousRepository.save(addPrevious);
+
+        return previousMapper.toPreviousDTO(previous);
+    }
+
     private QuestionInfoDTO generateQuestion(QuestionInfo __questionInfo) {
 
         List<QuestionType> questionTypeList = questionTypeRepository.findByQuestionInfo(__questionInfo);
@@ -204,6 +222,137 @@ public class UserCbtService {
                 __questionInfo.getQuestionInfoName(),
                 questionTypeDTOList
         );
+    }
+
+
+    private QuestionInfoDTO generateIncorrect(Long __certId, HttpServletRequest request) {
+        Claims claims = jwtService.parseClaims(request);
+        Object idObj = claims.get("id");
+        Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
+
+        List<UserAnswer> userAnswerList = userAnswerRepository.findByUser_IdAndCertificate_Id(userId, __certId);
+
+        Map<Long, UserAnswer> userAnswerMap = userAnswerList.stream()
+                .collect(Collectors.toMap(
+                        ua -> ua.getAnswer().getId(),
+                        ua -> ua
+                ));
+
+        Set<Long> questionIds = new HashSet<>();
+
+        for (Map.Entry<Long, UserAnswer> uam : userAnswerMap.entrySet()) {
+
+            Long id = uam.getValue().getAnswer().getQuestion().getId();
+
+            questionIds.add(id);
+        }
+
+        List<Question> questionList = questionRepository.findByIdIn(questionIds.stream().toList());
+
+        List<Answer> answerList = answerRepository.findByQuestionIn(questionList.stream().toList());
+
+        List<QuestionType> questionTypeList = questionList.stream()
+                .map(Question::getQuestionType).distinct().toList();
+
+        QuestionInfo questionInfo = questionTypeList.get(0).getQuestionInfo();
+
+        Map<Long, List<AnswerDTO>> answerListMap = new HashMap<>();
+
+        for (Answer a : answerList) {
+
+            AnswerDTO answerDTO = new AnswerDTO();
+
+            answerDTO.setAnswer_id(a.getId());
+            answerDTO.setQuestion_id(a.getQuestion().getId());
+            answerDTO.setBool(a.getBool());
+            answerDTO.setContent(a.getContent());
+            answerDTO.setImg(a.getImg());
+            answerDTO.setSolution(a.getSolution() == null ? "" : a.getSolution());
+
+            answerListMap.computeIfAbsent(a.getQuestion().getId(), k -> new ArrayList<>()).add(answerDTO);
+        }
+
+        for (Map.Entry<Long, List<AnswerDTO>> entry : answerListMap.entrySet()) {
+
+            List<AnswerDTO> list = entry.getValue();
+
+            List<AnswerDTO> correctList = new ArrayList<>(list.stream()
+                    .filter(AnswerDTO::getBool)
+                    .toList());
+
+            List<AnswerDTO> incorrectList = new ArrayList<>(list.stream()
+                    .filter(dto -> !dto.getBool())
+                    .toList());
+
+            Collections.shuffle(correctList);
+            AnswerDTO correct = correctList.get(0);
+
+            Collections.shuffle(incorrectList);
+            List<AnswerDTO> incorrect = incorrectList.stream()
+                    .limit(3)
+                    .toList();
+
+            List<AnswerDTO> finalList = new ArrayList<>();
+            finalList.add(correct);
+            finalList.addAll(incorrect);
+            Collections.shuffle(finalList);
+
+            entry.setValue(finalList);
+        }
+
+        List<QuestionDTO> questionDTOList = new ArrayList<>();
+
+        for (Question q : questionList) {
+
+            List<AnswerDTO> answers = answerListMap.get(q.getId());
+
+            QuestionDTO dto = new QuestionDTO();
+            dto.setQuestion_id(q.getId());
+            dto.setText(q.getText());
+            dto.setContent(q.getContent());
+            dto.setImg(q.getImg());
+            dto.setAnswers(answers);
+
+            questionDTOList.add(dto);
+        }
+
+        Collections.shuffle(questionDTOList);
+
+        long questionNum = 1L;
+
+        for (QuestionDTO qdto : questionDTOList) qdto.setQuestion_num(questionNum++);
+
+        Map<Long, QuestionDTO> questionDTOMap = questionDTOList.stream()
+                .collect(Collectors.toMap(QuestionDTO::getQuestion_id, q -> q));
+
+        Map<Long, List<QuestionDTO>> questionDTOListMap = new HashMap<>();
+
+        for (Question q : questionList) {
+            Long typeId = q.getQuestionType().getId();
+            Long qid = q.getId();
+
+            QuestionDTO dto = questionDTOMap.get(qid);
+            if (dto == null) continue;
+
+            questionDTOListMap
+                    .computeIfAbsent(typeId, k -> new ArrayList<>())
+                    .add(dto);
+        }
+
+        List<QuestionTypeDTO> questionTypeDTOList = new ArrayList<>();
+
+        for (QuestionType qt : questionTypeList) {
+            QuestionTypeDTO typeDTO = new QuestionTypeDTO();
+
+            typeDTO.setQuestion_type_id(qt.getId());
+            typeDTO.setQuestion_type_name(qt.getQuestionTypeName());
+            typeDTO.setQuestions(questionDTOListMap.get(qt.getId()));
+
+            questionTypeDTOList.add(typeDTO);
+        }
+
+        return new QuestionInfoDTO(questionInfo.getId(),
+                questionInfo.getQuestionInfoName(), questionTypeDTOList);
     }
 
     public UserIncorrectDTO getUserIncorrect(Long __certId, HttpServletRequest request) {
