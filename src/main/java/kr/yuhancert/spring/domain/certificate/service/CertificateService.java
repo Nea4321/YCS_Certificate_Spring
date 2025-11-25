@@ -6,7 +6,6 @@ import kr.yuhancert.spring.domain.certificate.mapper.*;
 import kr.yuhancert.spring.domain.certificate.repository.*;
 import kr.yuhancert.spring.global.cache.service.CacheService;
 import kr.yuhancert.spring.global.cache.util.CacheList;
-import kr.yuhancert.spring.infra.config.CertConfigRegistry;
 import kr.yuhancert.spring.infra.crawling.engine.EngineRunner;
 import kr.yuhancert.spring.infra.crawling.manager.CertificateExecutor;
 import org.springframework.beans.factory.annotation.Value;

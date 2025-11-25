@@ -183,6 +183,7 @@ public class UserCbtHistoryService {
                 userAnswer.setAnswer(answerMap.get(a.getAnswer_id()));
                 userAnswer.setBool(a.getBool());
                 userAnswer.setPrevious(previous);
+                userAnswer.setQuestion(answerMap.get(a.getAnswer_id()).getQuestion());
 
                 userAnswerList.add(userAnswer);
             }
