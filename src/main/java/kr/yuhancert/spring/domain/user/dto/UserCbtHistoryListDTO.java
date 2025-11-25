@@ -13,6 +13,7 @@ import java.time.Instant;
 @NoArgsConstructor
 public class UserCbtHistoryListDTO {
     private Long previous_id;
+    private String previous_type;
     private Integer score;
     private Integer correct_count;
     private Instant created_at;

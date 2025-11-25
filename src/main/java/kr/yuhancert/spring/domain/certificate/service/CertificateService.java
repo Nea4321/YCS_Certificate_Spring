@@ -9,8 +9,6 @@ import kr.yuhancert.spring.global.cache.util.CacheList;
 import kr.yuhancert.spring.infra.config.CertConfigRegistry;
 import kr.yuhancert.spring.infra.crawling.engine.EngineRunner;
 import kr.yuhancert.spring.infra.crawling.manager.CertificateExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +22,6 @@ import java.util.stream.Collectors;
 public class CertificateService {
 
     private final CacheService cacheService;
-    Logger logger = LoggerFactory.getLogger(CertificateService.class);
     private final CertificateRepository certificateRepository;
     private final CertDataRepository certDataRepository;
     private final TagRepository tagRepository;
@@ -41,7 +38,6 @@ public class CertificateService {
     private List<TagMap> tagMapEntities;
     private List<Organization> organizationEntities;
     private CertData certDataEntities;
-    private final CertConfigRegistry configRegistry;
     private final EngineRunner engineRunner;
     private final JsonCertificateParser parser;
     private final CertificateExecutor executor;
@@ -69,7 +65,6 @@ public class CertificateService {
             CertificateMapper __certificateMapper,
             CertDataMapper __certDataMapper,
             TagMapper __tagMapper,
-            CertConfigRegistry certConfigRegistry,
             EngineRunner engineRunner,
             JsonCertificateParser parser,
             CertificateExecutor executor,
@@ -86,7 +81,6 @@ public class CertificateService {
         this.certDataMapper = __certDataMapper;
         this.tagMapper = __tagMapper;
         this.organizationMapper = organizationMapper;
-        this.configRegistry = certConfigRegistry;
         this.engineRunner = engineRunner;
         this.parser = parser;
         this.executor = executor;
@@ -122,13 +116,9 @@ public class CertificateService {
             return cacheCertificate;
         }
 
-        if(certificateEntities == null || certificateEntities.isEmpty()) {
-            certificateEntities = certificateRepository.findAll();
-        }
+        certificateEntities = certificateRepository.findAll();
 
-        if(tagMapEntities == null || tagMapEntities.isEmpty()) {
-            tagMapEntities = tagMapRepository.findAll();
-        }
+        tagMapEntities = tagMapRepository.findAll();
 
         Map<Long, List<Long>> tagMapMap = tagMapEntities.stream()
                 .collect(Collectors.groupingBy(

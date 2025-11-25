@@ -44,6 +44,7 @@ public interface UserCbtHistoryCertMapper {
         for (UserCbtHistory h : __history) {
             UserCbtHistoryListDTO listDTO = new UserCbtHistoryListDTO(
                     h.getPrevious().getId(),
+                    h.getPrevious().getType(),
                     h.getScore(),
                     h.getCorrectCount(),
                     h.getCreatedAt().toInstant(),
