@@ -12,6 +12,8 @@ import kr.yuhancert.spring.domain.auth.entity.SocialType;
 import kr.yuhancert.spring.domain.auth.repository.UserRepository;
 import kr.yuhancert.spring.domain.user.entity.UserData;
 import kr.yuhancert.spring.domain.user.repository.UserDataRepository;
+import kr.yuhancert.spring.global.cache.service.CacheService;
+import kr.yuhancert.spring.global.cache.util.CacheList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,6 +31,8 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class AuthService {
+
+    private final CacheService cacheService;
     private final List<SocialLoginService> loginServices;
     private final UserRepository userRepository;
     private final UserDataRepository userDataRepository ;
@@ -36,12 +40,13 @@ public class AuthService {
     private final JwtKeyService jwtKeyService;
 
     public AuthService(UserRepository userRepository, JwtService jwtService, JwtKeyService jwtKeyService, List<SocialLoginService> loginServices
-                        , UserDataRepository userDataRepository) {
+                        , UserDataRepository userDataRepository, CacheService cacheService) {
         this.loginServices = loginServices;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.jwtKeyService = jwtKeyService;
         this.userDataRepository = userDataRepository;
+        this.cacheService = cacheService;
     }
 
     // 소셜 로그인(구글,카카오..) 처리 로직
@@ -163,7 +168,14 @@ public class AuthService {
     }
 
     //리프레시 토큰 삭제 ( 그냥 토큰 만료시간 0으로 만드는거임 )
-    public ResponseEntity<?> logout(HttpServletResponse response) {
+    public ResponseEntity<?> logout(HttpServletResponse response, HttpServletRequest request) {
+        Claims claims = jwtService.parseClaims(request);
+        Object idObj = claims.get("id");
+        Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0L;
+
+        cacheService.evict(CacheList.USER_TOKEN_CACHE.getName(), userId);
+        cacheService.clear(CacheList.USER_TOKEN_CACHE.getName());
+
         ResponseCookie cookie_s = ResponseCookie.from("access_token", "")
                 .httpOnly(true)
                 .secure(false)                      // true - https 환경만 전송 / false - http도 전달 가능
@@ -223,8 +235,12 @@ public class AuthService {
         String accessToken = jwtService.createAccessToken(id, name, email, socialType, role);
         String refreshToken = jwtService.createRefreshToken(email);
 
+        UserTokenDTO userTokenDTO = new UserTokenDTO(id,accessToken);
+        // redis 쿠키에 id랑 토큰값 저장
+        cacheService.put(CacheList.USER_TOKEN_CACHE.getName(),id, userTokenDTO);
+
         // 액세스 토큰 쿠키로 변환
-        // 월래 쿠키 변환 안 해도 상관없어서 안 만들었는데(parse기능 사용 안함) favorite 로직이 액세스 토큰이 쿠키에 저장되어야 해서 액세스도 쿠키로 저장함.
+        // 월래 쿠키 변환 안 해도 상관없어서 안 만들었는데(parse기능 사용 안함) favorite 로직이 액세스 토큰이 previous쿠키에 저장되어야 해서 액세스도 쿠키로 저장함.
         ResponseCookie cookie_s = ResponseCookie.from("access_token", accessToken)
                 .httpOnly(true)
                 .secure(false)                      // true - https 환경만 전송 / false - http도 전달 가능

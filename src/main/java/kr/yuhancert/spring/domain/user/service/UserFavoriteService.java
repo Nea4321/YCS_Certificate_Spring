@@ -2,6 +2,7 @@ package kr.yuhancert.spring.domain.user.service;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
+import kr.yuhancert.spring.domain.auth.dto.UserTokenDTO;
 import kr.yuhancert.spring.domain.auth.entity.User;
 import kr.yuhancert.spring.domain.auth.service.JwtService;
 import kr.yuhancert.spring.domain.certificate.entity.Certificate;
@@ -18,9 +19,13 @@ import kr.yuhancert.spring.domain.user.entity.UserFavorite;
 import kr.yuhancert.spring.domain.user.mapper.UserFavoriteMapper;
 import kr.yuhancert.spring.domain.user.repository.UserFavoriteRepository;
 import kr.yuhancert.spring.domain.auth.repository.UserRepository;
+import kr.yuhancert.spring.global.cache.service.CacheService;
+import kr.yuhancert.spring.global.cache.util.CacheList;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,6 +43,7 @@ public class UserFavoriteService {
     private final DepartmentRepository departmentRepository;
     private final CertificateRepository certificateRepository;
     private final DeptMapRepository deptMapRepository;
+    private final CacheService cacheService;
     private List<UserFavorite> userFavoriteEntities;
     private List<DeptMap> deptMapEntities;
     private List<Certificate> certificateEntities;
@@ -51,7 +57,7 @@ public class UserFavoriteService {
                                UserFavoriteMapper __userFavoriteMapper,
                                DepartmentRepository departmentRepository,
                                CertificateRepository certificateRepository,
-                               DeptMapRepository deptMapRepository) {
+                               DeptMapRepository deptMapRepository, CacheService cacheService) {
         this.jwtService = __jwtService;
         this.departmentService = __departmentService;
         this.userFavoriteRepository = __userFavoriteRepository;
@@ -62,6 +68,7 @@ public class UserFavoriteService {
         this.departmentRepository = departmentRepository;
         this.certificateRepository = certificateRepository;
         this.deptMapRepository = deptMapRepository;
+        this.cacheService = cacheService;
     }
 
 
@@ -69,6 +76,7 @@ public class UserFavoriteService {
         Claims claims = jwtService.parseClaims(request);
         Object idObj = claims.get("id");
         Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0L;
+
 
         List<UserFavorite> favorites = userFavoriteRepository.findAllByUser_Id(userId);
         Map<String, Map<Long, UserFavorite>> userFavoriteMapMap = userService.toUserFavoriteMapMap(favorites);
@@ -125,6 +133,8 @@ public class UserFavoriteService {
         Object idObj = claims.get("id");
         Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : null;
 
+
+
         List<UserFavorite> userFavoriteList = userFavoriteRepository.findAllByUser_Id(userId);
 
         Map<String, Map<Long, UserFavorite>> userFavoriteMapMap = userService.toUserFavoriteMapMap(userFavoriteList);
@@ -154,6 +164,8 @@ public class UserFavoriteService {
 
         Object idObj = claims.get("id");
         Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
+
+
 
         //(광클 했을때 중복 값 생성 제거)
         userFavoriteRepository.deleteAll(userFavoriteRepository.findAllByUser_IdAndTypeAndTypeId(userId, __type.toString(), __typeId));
@@ -198,6 +210,8 @@ public class UserFavoriteService {
 
         Object idObj = claims.get("id");
         Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
+
+
 
         User userEntity = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));

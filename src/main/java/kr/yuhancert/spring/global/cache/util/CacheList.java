@@ -22,6 +22,7 @@ public class CacheList {
     public static final CertCache TAG_CACHE = CertCache.of("tagCache", 1, 24, 100);
     public static final CertCache ORG_CACHE = CertCache.of("orgCache", 1, 24, 100);
     public static final CertCache NAT_CACHE = CertCache.of("natCache", 1, 24, 100);
+    public static final CertCache USER_TOKEN_CACHE = CertCache.of("userTokenCache", 1, 24, 1000);
 
 
     /// 모든 캐시 목록
@@ -30,6 +31,8 @@ public class CacheList {
             FACULTY_CACHE, DEPARTMENT_CACHE, MAJOR_CACHE, DEPT_MAP_CACHE, DEPT_LIST_CACHE, DEPT_DATA_CACHE, DEPT_SCHEDULE_CACHE,
             /// 자격증 관련
             CERT_CACHE, CERT_DEPT_CACHE, CERT_DATA_CACHE, TAG_CACHE, ORG_CACHE
+            ///  유저 관련
+            ,USER_TOKEN_CACHE
 
     );
 
