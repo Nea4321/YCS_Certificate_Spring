@@ -148,6 +148,7 @@ public class UserService {
     // 이걸로 동일 로그인 인지 체크.
     public ResponseEntity<?> checkToken(HttpServletRequest request) {
         ///  요청 들어온 액세스토큰, redis에 저장된 액세스토큰 두개를 비교 해서 불일치 하면 오류 생성
+        log.info("중복 로그인 체크 로직 실행 됨..!");
         Claims claims = jwtService.parseClaims(request);
         Object idObj = claims.get("id");
         Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
@@ -168,9 +169,17 @@ public class UserService {
         log.info("redis에 저장된 토큰: {}",redisToken.getToken());
         log.info("클라이언트에 저장된 토큰: {}",accessToken);
 
-        if(redisToken == null || !redisToken.getToken().equals(accessToken)) {
+        if (redisToken == null) {
+            // 캐시가 사라졌거나 Redis 장애 상황
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("세션 정보가 존재하지 않습니다. 다시 로그인해주세요.");
+        }
+
+        if (!redisToken.getToken().equals(accessToken)) {
+            // 실제 중복 로그인 감지
             log.info("중복 로그인 감지: userId={}, token={}", userId, accessToken);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("다른 기기에서 로그인하여 해당 세션은 만료되었습니다.");
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("다른 기기에서 로그인하여 해당 세션은 만료되었습니다.");
         }
         return ResponseEntity.ok("");
     }

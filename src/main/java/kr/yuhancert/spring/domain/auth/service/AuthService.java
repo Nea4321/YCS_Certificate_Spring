@@ -235,10 +235,12 @@ public class AuthService {
         String accessToken = jwtService.createAccessToken(id, name, email, socialType, role);
         String refreshToken = jwtService.createRefreshToken(email);
 
-        UserTokenDTO userTokenDTO = new UserTokenDTO(id,accessToken);
+        UserTokenDTO userTokenDTO = new UserTokenDTO(accessToken);
         // redis 쿠키에 id랑 토큰값 저장
         cacheService.put(CacheList.USER_TOKEN_CACHE.getName(),id, userTokenDTO);
-
+        log.info("redis 캐쉬에 id : {} accessToken : {} 저장함" , id, accessToken);
+//        UserTokenDTO redis_token=cacheService.get(CacheList.USER_TOKEN_CACHE.getName(),id);
+//        if(!redis_token.getToken().equals(accessToken)){log.info("중복 로그인 발생 로그인 차단 "); throw new RuntimeException(); }
         // 액세스 토큰 쿠키로 변환
         // 월래 쿠키 변환 안 해도 상관없어서 안 만들었는데(parse기능 사용 안함) favorite 로직이 액세스 토큰이 previous쿠키에 저장되어야 해서 액세스도 쿠키로 저장함.
         ResponseCookie cookie_s = ResponseCookie.from("access_token", accessToken)
