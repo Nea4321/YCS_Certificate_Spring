@@ -10,6 +10,7 @@ import kr.yuhancert.spring.infra.crawling.engine.EngineRunner;
 import kr.yuhancert.spring.infra.crawling.manager.CertificateExecutor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -212,6 +213,23 @@ public class CertificateService {
         //캐시 넣으면 더 복잡해질거 같아서 그냥 넘기기
         return certDataRepository.findSchedulesByIds(__ids);
 
+    }
+
+    // ✅ 새 공통 엔트리: 공공 + 민간
+    public void runById(Long certId) throws Exception {
+        Certificate cert = certificateRepository.findById(certId)
+                .orElseThrow(() -> new IllegalArgumentException("no certificate: " + certId));
+
+        String jmcd = cert.getJmcd();
+
+        if (jmcd != null && !jmcd.isBlank()) {
+            // 🔹 공공: 기존 runPublicById 로직 그대로 재사용
+            runPublicById(certId);
+        } else {
+            // 🔹 민간: Executor + CertConfigRegistry 사용
+            //   → 위에서 configRegistry.put(665L, ...) 해줬기 때문에 여기서는 certId만 넘기면 됨
+            executor.runAndSave(certId, null);
+        }
     }
 
     public void runFallback(String certName) throws Exception {

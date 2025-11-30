@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import kr.yuhancert.spring.domain.certificate.entity.CertData;
 import kr.yuhancert.spring.domain.certificate.entity.Certificate;
 import kr.yuhancert.spring.domain.certificate.entity.NationalCert;
@@ -32,20 +32,50 @@ public class JsonCertificateParser {
     private final CertificateRepository certificateRepository;
     private final ObjectMapper objectMapper; // 스프링 빈 주입
 
-    @PersistenceContext
-    private final EntityManager em;
+    private Path resolveJsonFilePath(String jsonPath) throws IOException {
+        Path base = Path.of(jsonPath);
 
-    /** JSON 존재/형식만 검증 (DB 저장 안 함) */
-    public void parseJsonOnly(String jsonPath) throws IOException {
-        Path p = Path.of(jsonPath);
-        if (Files.notExists(p)) {
-            throw new FileNotFoundException("❌ JSON 파일이 존재하지 않습니다: " + jsonPath);
+        if (Files.notExists(base)) {
+            throw new FileNotFoundException("JSON 경로 없음: " + jsonPath);
         }
-        // 파일 핸들 잠김 회피: 바이트로 읽어 파싱
+
+        // 1) 파일이면 그대로 반환
+        if (!Files.isDirectory(base)) {
+            return base;
+        }
+
+        // 2) 디렉터리이면: 우선 "이름이 숫자만이 아닌 *.norm.json" 을 찾는다 (ex. linux_master.norm.json)
+        try (var stream = Files.list(base)) {
+            var main = stream
+                    .filter(child -> child.getFileName().toString().endsWith(".norm.json"))
+                    .filter(child -> !child.getFileName().toString().matches("\\d+\\.norm\\.json"))
+                    .findFirst();
+
+            if (main.isPresent()) {
+                return main.get();
+            }
+        }
+
+        // 3) 그래도 못 찾으면, 그냥 아무 *.norm.json 이나 하나 사용 (fallback)
+        try (var stream = Files.list(base)) {
+            return stream
+                    .filter(child -> child.getFileName().toString().endsWith(".norm.json"))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException(
+                            "폴더 내 .norm.json 파일을 찾지 못했습니다: " + base
+                    ));
+        }
+    }
+
+
+    public void parseJsonOnly(String jsonPath) throws IOException {
+        Path p = resolveJsonFilePath(jsonPath);   // ← 새 헬퍼 사용
+
         byte[] bytes = Files.readAllBytes(p);
         objectMapper.readTree(bytes);
-        System.out.println("✅ JSON 파싱/검증 완료(저장 생략): " + jsonPath);
+        System.out.println("✅ JSON 파싱/검증 완료(저장 생략): " + p);
     }
+
 
     /**
      * JSON 파일을 읽어 cert_data( PK = certId )에 업서트.
@@ -68,12 +98,12 @@ public class JsonCertificateParser {
         return n != null && !n.isNull() && !n.isMissingNode();
     }
 
-    @Transactional
+    @Transactional(timeout = 120) // 2분 정도 여유
     public void parseAndSave(String jsonPath, Long certId) throws IOException {
         if (certId == null) throw new IllegalArgumentException("certId가 null 입니다.");
 
-        Path p = Path.of(jsonPath);
-        if (Files.notExists(p)) throw new FileNotFoundException("JSON 파일 없음: " + jsonPath);
+        // ★ 파일/폴더 모두 처리
+        Path p = resolveJsonFilePath(jsonPath);
 
         // 1) JSON 로드
         byte[] bytes = Files.readAllBytes(p);
@@ -94,11 +124,10 @@ public class JsonCertificateParser {
         if (!jmcd.isBlank()) meta.put("jmcd", jmcd);
         meta.put("cert_id", certId);
 
-        // 4) 업서트 (비관적 락으로 동시 저장 방지 권장)
-        CertData entity = certDataRepository.findByIdForUpdate(certId) // @Lock(PESSIMISTIC_WRITE)
+        // 4) 업서트
+        CertData entity = certDataRepository.findByIdForUpdate(certId)
                 .orElseGet(() -> {
                     CertData x = new CertData();
-                    // 공유 PK(@MapsId)라면 setId() 대신 setCertificate()만!
                     x.setCertificate(cert);
                     return x;
                 });
@@ -106,18 +135,20 @@ public class JsonCertificateParser {
         entity.setCertificateName(cert.getCertificateName());
         entity.setOrganization(cert.getOrganization());
         entity.setBasicInfo(asMap(obj.get("기본정보")));
-        entity.setSchedule(asListOfMap(obj.get("시험일정"))); // 배열 형태 유지
+        entity.setSchedule(asListOfMap(obj.get("시험일정")));
 
-        // ---- other_info 조립 ----
         var otherObj = objectMapper.createObjectNode();
         if (has(obj.get("우대현황")))           otherObj.set("우대현황", obj.get("우대현황"));
         if (has(obj.get("링크")))               otherObj.set("링크", obj.get("링크"));
         if (has(obj.get("종목별검정현황")))     otherObj.set("종목별검정현황", obj.get("종목별검정현황"));
-        if (has(obj.get("시험정보")))           otherObj.set("시험정보", obj.get("시험정보"));   // ⬅️ 추가
-        if (has(obj.get("기타정보")))           otherObj.set("기타정보", obj.get("기타정보")); // 호환용
+        if (has(obj.get("시험정보")))           otherObj.set("시험정보", obj.get("시험정보"));
+        // ★ 민간용 추가
+        if (has(obj.get("시험시간")))           otherObj.set("시험시간", obj.get("시험시간"));
+        if (has(obj.get("시험내용")))           otherObj.set("시험내용", obj.get("시험내용"));
+        if (has(obj.get("기타정보")))           otherObj.set("기타정보", obj.get("기타정보"));
 
-        entity.setOtherInfo(asMap(otherObj));   // ← Map<String,Object>로 변환되어 저장
-
+        entity.setOtherInfo(asMap(otherObj));
         certDataRepository.save(entity);
     }
+
 }

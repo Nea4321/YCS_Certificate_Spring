@@ -150,6 +150,13 @@ public class CertificateController {
         }
     }
 
+    // ✅ 공통 실행 엔드포인트
+    @PostMapping("/run/{certId}")
+    public ResponseEntity<String> run(@PathVariable Long certId) throws Exception {
+        certificateService.runById(certId);
+        return ResponseEntity.ok("✅ run 완료 (certId=" + certId + ")");
+    }
+
     @PostMapping("/run-fallback")
     public ResponseEntity<String> runByFallback(@RequestParam String certName) throws Exception {
         certificateService.runFallback(certName);
@@ -158,7 +165,6 @@ public class CertificateController {
 
     // kr/yuhancert/spring/domain/certificate/controller/CertificateController.java
 
-    // ✅ 1. 전체: 파이썬 실행 + JSON 저장 한꺼번에
     // ✅ 1. 전체: 파이썬 실행 + JSON 저장 한꺼번에
     //1번째: 내가 손 댄 곳 -> 파이썬 실행하고 json 저장까지 다 하는 친구
     @PostMapping("/run-public/{certId}")
