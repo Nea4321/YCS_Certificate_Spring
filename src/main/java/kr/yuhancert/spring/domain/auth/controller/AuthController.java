@@ -8,6 +8,7 @@ import kr.yuhancert.spring.domain.auth.dto.SocialLoginRequestDTO;
 import kr.yuhancert.spring.domain.auth.dto.UserResponseDTO;
 import kr.yuhancert.spring.domain.auth.service.AuthService;
 import kr.yuhancert.spring.domain.auth.service.EmailService;
+import kr.yuhancert.spring.domain.user.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +21,9 @@ import java.util.Map;
 public class AuthController {
     private final AuthService authService;
     private final EmailService emailService;
+    private final UserService userService;
 
-    public AuthController(AuthService authService, EmailService emailService) {this.authService = authService; this.emailService = emailService;}
+    public AuthController(AuthService authService, EmailService emailService, UserService userService) {this.authService = authService; this.emailService = emailService; this.userService = userService;}
 
     /**
      * 소셜 로그인 처리해서 jwt 토큰 넘겨줌
@@ -59,8 +61,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> RefreshTokenDelete(HttpServletResponse request) {
-        return authService.logout(request);
+    public ResponseEntity<?> RefreshTokenDelete(HttpServletResponse response, HttpServletRequest request) {
+        return authService.logout(response,request);
     }
 
     @PostMapping("/update")
@@ -83,4 +85,8 @@ public class AuthController {
         else return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증 실패 또는 만료됨"); // 실패 시 401
         }
 
+    @PostMapping("/duplicate")
+    public ResponseEntity<?> duplicateTokenCheck(HttpServletRequest request) {
+        return userService.checkToken(request);
+    }
 }

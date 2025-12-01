@@ -1,7 +1,9 @@
 package kr.yuhancert.spring.domain.user.service;
 
 import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import kr.yuhancert.spring.domain.auth.dto.UserTokenDTO;
 import kr.yuhancert.spring.domain.certificate.dto.ScheduleDTO;
 import kr.yuhancert.spring.domain.certificate.service.CertificateService;
 import kr.yuhancert.spring.domain.department.entity.DeptCert;
@@ -16,16 +18,24 @@ import kr.yuhancert.spring.domain.user.entity.UserFavorite;
 import kr.yuhancert.spring.domain.user.repository.UserDataRepository;
 import kr.yuhancert.spring.domain.user.repository.UserFavoriteRepository;
 import kr.yuhancert.spring.domain.auth.repository.UserRepository;
+import kr.yuhancert.spring.global.cache.service.CacheService;
+import kr.yuhancert.spring.global.cache.util.CacheList;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class UserService {
 
     private final JwtService jwtService;
     private final JwtKeyService jwtKeyService;
+    private final CacheService cacheService;
     private final CertificateService certificateService;
     private final UserRepository userRepository;
     private final UserDataRepository userDataRepository;
@@ -41,7 +51,8 @@ public class UserService {
                        UserRepository __userRepository,
                        UserDataRepository __userDataRepository,
                        UserFavoriteRepository __userFavoriteRepository,
-                       DeptCertRepository __deptCertRepository
+                       DeptCertRepository __deptCertRepository,
+                       CacheService __cacheService
 
     ) {
         this.jwtService = __jwtService;
@@ -51,6 +62,7 @@ public class UserService {
         this.userDataRepository = __userDataRepository;
         this.userFavoriteRepository = __userFavoriteRepository;
         this.deptCertRepository = __deptCertRepository;
+        this.cacheService = __cacheService;
     }
 
     public UserDataDTO getUserData(HttpServletRequest request) {
@@ -132,6 +144,45 @@ public class UserService {
                 ));
     }
 
+    // 로그인 되어있는 액세스 토큰이랑 redis 에 저장된 토큰이랑 비교하는 로직
+    // 이걸로 동일 로그인 인지 체크.
+    public ResponseEntity<?> checkToken(HttpServletRequest request) {
+        ///  요청 들어온 액세스토큰, redis에 저장된 액세스토큰 두개를 비교 해서 불일치 하면 오류 생성
+        log.info("중복 로그인 체크 로직 실행 됨..!");
+        Claims claims = jwtService.parseClaims(request);
+        Object idObj = claims.get("id");
+        Long userId = (idObj instanceof Number) ? ((Number) idObj).longValue() : 0;
+
+        String accessToken = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie c : cookies) {
+                if (c.getName().equals("access_token")) {
+                    accessToken = c.getValue();
+                    break;
+                }
+            }
+        }
+
+
+        UserTokenDTO redisToken = cacheService.get(CacheList.USER_TOKEN_CACHE.getName(),userId ,UserTokenDTO.class);
+        log.info("redis에 저장된 토큰: {}",redisToken.getToken());
+        log.info("클라이언트에 저장된 토큰: {}",accessToken);
+
+        if (redisToken == null) {
+            // 캐시가 사라졌거나 Redis 장애 상황
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("세션 정보가 존재하지 않습니다. 다시 로그인해주세요.");
+        }
+
+        if (!redisToken.getToken().equals(accessToken)) {
+            // 실제 중복 로그인 감지
+            log.info("중복 로그인 감지: userId={}, token={}", userId, accessToken);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("다른 기기에서 로그인하여 해당 세션은 만료되었습니다.");
+        }
+        return ResponseEntity.ok("");
+    }
 
     /**
      * 학과인지 자격증인지 따라 스케줄 분리
