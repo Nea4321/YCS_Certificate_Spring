@@ -42,20 +42,20 @@ public class UserCbtController {
     }
 
     @GetMapping(params = "cert_id")
-    public ResponseEntity<?> getUserIncorrect(@RequestParam Long __certId, HttpServletRequest request) {
+    public ResponseEntity<?> getUserIncorrect(@RequestParam("cert_id") Long certId,
+                                              HttpServletRequest request) {
         try {
-            PreviousDTO previousDTO = userCbtService.getIncorrect(__certId, request);
+            PreviousDTO previousDTO = userCbtService.getIncorrect(certId, request);
             logger.info(previousDTO.toString());
             return ResponseEntity.ok(previousDTO);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             logger.error("Error getting user incorrect", e);
             errorResponse.put("error", "Internal Server Error");
             errorResponse.put("message", e.getMessage());
             errorResponse.put("timestamp", new java.util.Date().toString());
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 }
